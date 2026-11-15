@@ -1,0 +1,96 @@
+Hold. Do not apply, build, checkpoint, enable, or publish the proposed CP4C diff.
+
+The response I received begins midway through the proposal. Re-send the complete CP4C response from the beginning, including:
+
+1. Complete file list
+2. Every proposed unified diff
+3. Flag change
+4. Build and service-worker changes
+5. Complete Backup & Restore HTML/JS/CSS changes
+6. Privacy-safe report-construction code
+7. All proposed tests and expected totals
+8. Service-worker lifecycle analysis
+9. Build verification
+10. Rollback plan
+
+Also revise these points:
+
+A. Service Worker
+
+Do not state that the new worker immediately activates and claims tabs unless the exact proposed sw.js proves this through reviewed skipWaiting/clients.claim behavior.
+
+Document these cases:
+
+- Existing tab controlled by v19
+- First reload after publication
+- Waiting-worker state
+- Second reload if required
+- Installed standalone PWA
+- Offline launch before and after update
+
+The user instructions must reflect actual lifecycle behavior, not an idealized sequence.
+
+B. Monotonic Rollback Versioning
+
+Do not propose rebuilding changed source while labeling it v19 or reusing hometask-v19.
+
+Use one of these rollback approaches:
+
+1. Restore the exact previously published v19 snapshot through a verified Replit deployment rollback; or
+2. Publish a new rollback build with a monotonic identity such as:
+   - APP_BUILD = "v20-rollback"
+   - CACHE = "hometask-v20-rollback"
+
+Never reuse an old cache identifier for newly built assets.
+
+C. Physical-iPhone Testing Without DevTools
+
+Do not require localStorage inspection, Safari Web Inspector, a Mac, or manual key deletion.
+
+All necessary evidence must be available through the flag-gated Backup & Restore interface and the privacy-safe shared report.
+
+D. V1 Authority Comparison
+
+Do not compare complete backup files byte-for-byte because exportedAt, backup metadata, and last-backup timestamps may legitimately change.
+
+Define a comparison that checks only authoritative user state:
+
+- Task IDs
+- lastDone
+- doneToday
+- skipUntil
+- tags
+- Preferences
+- Recent searches if portable
+- Every other documented v1 user-owned field
+
+The comparison must ignore expected export-envelope metadata.
+
+Marking Done during the test changes v1 intentionally. Do not describe the resulting backup as identical to the pre-test backup.
+
+E. Shadow Evidence Retention
+
+Do not instruct the user to clear hometask-v2-shadow manually. It should remain harmlessly stored until a later approved cleanup/migration policy handles it.
+
+F. Replit Rollback
+
+Do not claim one-click rollback is available or restores particular directories without current evidence.
+
+Show:
+
+- Exact Replit UI/action
+- Whether it restores a deployment snapshot or workspace checkpoint
+- Whether it affects source
+- Whether it affects published assets
+- Whether it requires another publication
+- How the live build is verified afterward
+
+G. Approval Boundary
+
+This remains a read-only proposal.
+
+End with:
+
+“Do you approve this corrected exact diff for application in the development workspace only, followed by local build and testing—but not publication?”
+
+Do not combine applying/building approval with publication approval. Publication must remain a later, separate decision after the built candidate is reviewed.

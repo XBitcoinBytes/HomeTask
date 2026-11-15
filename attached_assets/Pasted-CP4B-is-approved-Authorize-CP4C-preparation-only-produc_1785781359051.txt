@@ -1,0 +1,162 @@
+CP4B is approved.
+
+Authorize CP4C preparation only: produce the exact proposed shadow-only publication diff for review.
+
+This is a read-only planning task.
+
+Do not:
+
+- Edit or create files
+- Apply the diff
+- Create a checkpoint
+- Run a production build
+- Change dist/ or public/
+- Change the service worker
+- Enable the shadow flag
+- Publish or deploy
+- Create a project task
+
+Inspect the current source read-only and return a proposed unified diff in your response only.
+
+The proposed CP4C/CP4D candidate should cover:
+
+1. Shadow Diagnostic Build Identity
+
+Propose:
+
+- APP_BUILD changing from v19 to v20-shadow
+- Service-worker cache changing from hometask-v19 to hometask-v20-shadow
+- Any required build/version display changes
+
+Explain why the service-worker bump is required for the later explicitly approved publication.
+
+2. Enable the Shadow Runner
+
+Show the exact one-line proposed change:
+
+SHADOW_MIGRATION_ENABLED = false
+to:
+SHADOW_MIGRATION_ENABLED = true
+
+Do not apply it.
+
+3. V1 Remains Authoritative
+
+The proposed diff must not:
+
+- Activate hometask-v2 as live storage
+- Read tasks for rendering from the shadow candidate
+- Change Done or Skip storage
+- Change search, filters, onboarding, progress, backup, or import behavior
+- Delete or modify v1
+- Treat the shadow as a live database
+
+The shadow remains diagnostic only.
+
+4. Physical-iPhone Report Retrieval
+
+Propose a flag-gated addition inside the existing Backup & Restore sheet.
+
+When the flag is enabled, it may show:
+
+- “Data Upgrade Check: Running”
+- “Data Upgrade Check: Verified”
+- “Data Upgrade Check: Needs Review”
+
+If verified, provide a 44×44pt-accessible control labeled:
+
+“Share Upgrade Check Report”
+
+The report must contain only:
+
+- Build and catalog versions
+- Source and target schema numbers
+- Collection counts
+- Repair-category counts
+- Warning count
+- Unexpected-difference count
+- Difference category codes
+- Shadow byte size
+- Verification status
+
+It must not contain:
+
+- Candidate v2 data
+- Source digest
+- Task or room names
+- Tags
+- Searches
+- Dates from task history
+- IDs
+- Raw storage values
+- User-created text
+
+Prefer navigator.share on iPhone, with a safe JSON download fallback.
+
+The UI must remain completely absent when the flag is false.
+
+5. Failure Behavior
+
+The proposed UI must:
+
+- Never block application startup
+- Never prevent normal v1 use
+- Display calm language
+- Never report “Verified” unless the wrapper passes full validation
+- Offer no activation or migration button
+- Avoid exposing raw diagnostics
+- Leave v1 untouched after every outcome
+
+6. Exact Proposed Files
+
+List every file that would change in the future CP4D implementation.
+
+For each file provide:
+
+- Exact reason
+- Proposed unified diff
+- Risk level
+- Tests required
+
+7. Test Plan
+
+Propose tests for:
+
+- Flag false: UI absent and zero shadow operations
+- Flag true: Running → Verified
+- Flag true: Needs Review
+- Missing shadow
+- Malformed shadow
+- Invalid source fingerprint
+- Invalid candidate
+- Share-sheet success
+- Share-sheet rejection
+- Download fallback
+- Report privacy scan
+- VoiceOver names
+- 44pt targets
+- No v1 changes
+- No rendering from v2
+- No console errors
+- Offline report sharing where supported
+
+8. Publication and Rollback Plan
+
+Describe—but do not execute:
+
+- Exact build command
+- Expected generated assets
+- Service-worker update behavior
+- Production verification
+- Physical-iPhone test steps
+- How to revert immediately to v19
+- How the shadow key would be handled after rollback
+- How to prove v1 stayed authoritative
+
+9. Final Approval Gate
+
+End with:
+
+“Do you approve applying this exact CP4C shadow-only diff, building v20-shadow, and preparing it for explicit manual publication?”
+
+Do not apply, build, checkpoint, or publish anything.

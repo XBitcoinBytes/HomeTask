@@ -1,0 +1,24 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Full-bleed background (maskable-safe) -->
+  <rect width="512" height="512" fill="#050507"/>
+
+  <!-- House silhouette: peak → left-eave → bottom-left → bottom-right → right-eave
+       Bounding box 88,80 → 424,436  (17% padding each side — inside maskable safe zone) -->
+  <path d="M256 80 L88 252 L88 436 L424 436 L424 252 Z" fill="#4ade80"/>
+
+  <!-- Door (dark cutout) -->
+  <rect x="214" y="318" width="84" height="118" rx="10" fill="#061310"/>
+
+  <!-- Left window (dark cutout) -->
+  <rect x="120" y="278" width="64" height="50" rx="8" fill="#061310"/>
+
+  <!-- Right window (dark cutout) -->
+  <rect x="328" y="278" width="64" height="50" rx="8" fill="#061310"/>
+
+  <!-- Check-mark drawn inside the door — the "task done" motif -->
+  <!-- Path: lower-left → bottom-centre → upper-right -->
+  <path d="M228 374 L250 396 L288 346"
+        stroke="#4ade80" stroke-width="11"
+        stroke-linecap="round" stroke-linejoin="round"
+        fill="none"/>
+</svg>

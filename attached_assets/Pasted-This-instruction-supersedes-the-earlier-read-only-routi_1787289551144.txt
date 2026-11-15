@@ -1,0 +1,60 @@
+This instruction supersedes the earlier read-only routing brief. Do not repeat the routing analysis.
+
+The required user decisions are now explicitly made:
+
+- Keep the existing Autoscale deployment.
+- Keep the application router and `/api` production service.
+- Preserve the existing public origin.
+- Do not switch to Static Deployment.
+- Do not unpublish the current deployment first.
+- Do not modify `.replit`.
+- Missing custom security headers are accepted as a documented, non-blocking F1 limitation.
+- A normal publish-time production rebuild is authorized.
+- Publishing HomeTask `v22-f1` is approved.
+
+Create exactly one successor task because Task #22 is already merged:
+
+`Publish HomeTask v22-f1 on existing Autoscale`
+
+Assign and activate that task. If assignment fails, stop and report only the task-manager error. Do not create another task.
+
+Once active:
+
+1. Confirm immediately before publishing that:
+   - target is Autoscale;
+   - router is `application`;
+   - public origin remains `https://web-starter-kit-shipouts.replit.app`;
+   - `/api` remains part of production;
+   - source identity is `v22-f1`;
+   - worker cache is `hometask-v22-f1`;
+   - `V2_ACTIVATION_ENABLED` remains `false`.
+
+2. Publish once through the existing Autoscale configuration.
+
+3. Allow its configured production build to run. New asset hashes are acceptable.
+
+4. Monitor until terminal success or failure. Do not start a duplicate publish or repeatedly retry a failure.
+
+5. After terminal success, perform only read-only public verification:
+   - public URL returns HTTP 200;
+   - record the published main JS and CSS hashes;
+   - exactly one hashed main JS and CSS are referenced;
+   - no `/@vite/client`, raw `/src/script.js`, Vite overlay, or source-map directive is exposed;
+   - manifest, favicon, icons, worker, and hashed assets return successfully;
+   - visible build is `v22-f1`;
+   - worker cache is `hometask-v22-f1`;
+   - service worker caches the exact published asset paths;
+   - v2 remains disabled;
+   - startup has no console errors;
+   - `/api` remains reachable using a non-mutating health request;
+   - record the response headers actually present.
+
+6. Do not create or modify tasks, rooms, backups, restores, imports, or other user data during verification.
+
+Stop and report immediately if the deployment target or origin changes, `/api` fails, v2 becomes enabled, the service worker fails, development assets appear, or any data/rollback ambiguity is found. Do not automatically roll back.
+
+If verification passes:
+
+- Prepare but do not execute the physical-iPhone smoke-test checklist.
+- Mark the publishing task complete.
+- Return the deployment status, final URL, published hashes, verification results, `/api` status, worker/cache result, observed headers, confirmation of no user-data changes, and the iPhone checklist.

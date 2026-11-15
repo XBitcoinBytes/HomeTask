@@ -1,0 +1,104 @@
+Revise CP5A before implementation. Do not write code yet.
+
+Required corrections:
+
+1. Separate persistent authority from temporary transaction state.
+
+Use distinct concepts:
+
+- snapshot key — retained for rollback
+- transaction journal/staging key — temporary state machine
+- final v2 data key
+- persistent authority marker — committed last and retained while v2 is authoritative
+
+Do not treat the authority marker as cleanup data.
+
+2. Correct committed recovery.
+
+For committed + fully verified:
+
+- retain the authority marker
+- retain final v2 data
+- retain the rollback snapshot according to the approved retention policy
+- remove only temporary staging/journal data when safe
+
+Never delete the authority marker during successful recovery.
+
+3. Correct pre-commit recovery.
+
+If final v2 data exists but the authority marker is absent:
+
+- v1 is already authoritative because v1 was never deleted or modified
+- do not rewrite v1 unnecessarily
+- quarantine or remove only incomplete v2 transaction artifacts after preserving diagnostic evidence
+- restore v1 from snapshot only if byte verification proves a v1 source key was actually altered
+
+4. Clarify CP5A’s disconnected scope.
+
+CP5A may implement and test recoverActivationStartup(), but must not wire it into script.js or production startup. Change “runs before any app module” to:
+
+“Designed and structurally tested to be callable before any authoritative storage read; production wiring is deferred to CP5B.”
+
+5. Define the exact state machine.
+
+Use explicit states and allowed transitions, such as:
+
+snapshot_verified → staged → v2_written → committed
+
+For every state define:
+
+- required stored records
+- permitted next state
+- recovery behavior
+- whether v1 or v2 is authoritative
+- what may be deleted
+- what must be retained
+
+The authority marker is the sole final authority switch.
+
+6. Define and validate the authority marker.
+
+It must contain only bounded technical fields, including:
+
+- marker schema/version
+- activation/transaction ID
+- source fingerprint
+- final v2 digest
+- target schema
+- committed timestamp
+
+Validate it strictly and verify that its digest matches the stored v2 bytes.
+
+7. Snapshot scope and retention.
+
+Use the exact approved §G key list, not an arbitrary caller-provided subset. Preserve raw strings and null-for-absence.
+
+State the approved snapshot-retention rules explicitly. CP5A must not silently delete the rollback snapshot.
+
+8. Malformed evidence handling.
+
+Replace vague “safe removal or quarantine” language with:
+
+- preserve malformed raw transaction evidence in a bounded quarantine record
+- verify the quarantine write before removing the malformed source
+- if quarantine fails, retain the original evidence
+- never discard the last recoverable copy
+
+9. Timeouts.
+
+Every adapter read, write, remove, digest, and verification operation must use the existing injected timeout/scheduler pattern. No operation may hang startup indefinitely.
+
+10. Testing additions.
+
+Add tests proving:
+
+- successful recovery never deletes the authority marker
+- marker deletion/absence keeps v1 authoritative
+- incomplete v2 does not cause unnecessary v1 rewrites
+- snapshots survive successful commit according to retention policy
+- marker digest mismatch rolls back authority safely
+- quarantine failure retains original evidence
+- every adapter operation times out safely
+- CP5A remains disconnected from script.js and all app modules
+
+Return only the corrected task plan, no implementation, in no more than 500 words. Do not create suggested tasks.

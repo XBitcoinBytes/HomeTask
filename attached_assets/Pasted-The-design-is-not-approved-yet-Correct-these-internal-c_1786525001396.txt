@@ -1,0 +1,12 @@
+The design is not approved yet. Correct these internal contradictions before code:
+
+1. No transaction-state read or cleanup may occur outside the exclusive lock. Move the rollback_failed/staging guard, undo snapshot read, and snapshot clear inside runExclusive. Otherwise a second context can race them.
+2. Do not duplicate the journal/DATA/LIVE-STATE algorithm in v2-locked-import.js. Reuse writeLockedMutation as the sole mutation engine inside the already-held lock. Keep import staging coarse: verified snapshot + staged before the call; committed after success; failed/recovery-needed after a structured failure. The mutation journal remains the sole authority for partial DATA/LIVE-STATE writes.
+3. Import and undo must require a valid existing DATA + LIVE-STATE pair. Missing/malformed LIVE-STATE must fail closed; never silently treat it as generation -1 in an already activated repository.
+4. recoverV2ImportStartup must acquire the same shared callback-scoped lock. Recovery order remains mutation recovery first, then import-staging reconciliation; both must be serialized against normal mutation/import/undo.
+5. Snapshot/staging records need bounded transactionId plus sourceDigest/targetDigest so cleanup and undo can verify ownership. Never clear a snapshot or staging record unless its transactionId still matches the operation being completed.
+6. Undo must, inside one lock: read+validate the current owned snapshot, call writeLockedMutation with historical DATA as a forward mutation, verify DATA/LIVE-STATE, then conditionally clear only that snapshot. No outside-lock clear.
+7. A failed writeLockedMutation must retain its journal and import staging evidence for existing mutation recovery; do not add a second custom rollback implementation that can diverge.
+8. Clarify that B2 recovery remains disconnected until local-only C wiring; no production startup change.
+
+Return Revision 2 with the simplified state table, exact lock scope, crash ownership, and corrected smallest file list. No code yet, no C/build/publish.

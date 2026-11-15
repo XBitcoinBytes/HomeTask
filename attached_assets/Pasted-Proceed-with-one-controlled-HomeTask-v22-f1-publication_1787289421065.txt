@@ -1,0 +1,119 @@
+Proceed with one controlled HomeTask `v22-f1` publication on the existing Replit Autoscale deployment.
+
+Approved architectural decision:
+
+- Keep the current Autoscale deployment.
+- Preserve the existing application router, `/api` service, and public origin.
+- Do not switch to Static Deployment.
+- Do not unpublish the current deployment first.
+- Do not modify `.replit`.
+- Do not add unverified `deployment.responseHeaders`.
+- Record the missing security headers as a known, non-blocking post-release hardening item.
+- Do not create a separate HomeTask project or change domains.
+
+Task handling:
+
+- Task #22 is already merged and cannot be treated as active work.
+- If Replit allows Task #22 to be reopened safely, reopen and assign it.
+- Otherwise create exactly one successor task titled `Publish HomeTask v22-f1 on existing Autoscale`.
+- Do not create parallel or follow-up tasks.
+- If task activation or assignment fails, stop before publishing.
+
+Accepted baseline:
+
+- Task #23 is complete.
+- Release identity: `v22-f1`
+- Service-worker cache: `hometask-v22-f1`
+- Regression: 31 suites, 1,456/1,456 checks passed.
+- Accepted pre-publish artifact had:
+  - `/assets/index-DQjDY3fE.js`
+  - `/assets/index-BSiqrrZg.css`
+- A normal publish-time rebuild is approved, so hashes may change.
+- v2 must remain disabled.
+- No live or iPhone data may be created, changed, imported, restored, or deleted.
+
+Pre-publish gates:
+
+1. Confirm the target remains:
+   - deployment type: Autoscale
+   - router: application
+   - existing public origin: `https://web-starter-kit-shipouts.replit.app`
+   - `/api` production service remains included
+
+2. Confirm the publish uses the accepted source containing:
+   - `v22-f1`
+   - `hometask-v22-f1`
+   - `V2_ACTIVATION_ENABLED = false`
+   - the corrected service-worker path logic
+   - accessible `--text-3: #88847e`
+
+3. Do not rerun the full regression. The accepted 31/1,456 result remains the release baseline.
+
+Publishing:
+
+1. Publish through the existing Autoscale configuration.
+2. Allow the configured production build to run once as part of publishing.
+3. Monitor until Replit reports terminal success or failure.
+4. Do not start a duplicate publish while one is active.
+5. If the target, origin, router, or `/api` inclusion changes unexpectedly, stop without publishing.
+6. If publishing fails, report the terminal failure and stop. Do not repeatedly retry or alter configuration.
+
+Post-publish verification:
+
+Use only read-only requests and a clean/incognito browser context.
+
+1. Confirm the existing public URL returns HTTP 200.
+2. Record the actual newly generated main JS and CSS hashes.
+3. Confirm production HTML references exactly one hashed main JS and one hashed main CSS file.
+4. Confirm absence of:
+   - `/@vite/client`
+   - raw `/src/script.js`
+   - Vite development overlay markers
+   - `sourceMappingURL`
+5. Confirm successful responses for:
+   - `/manifest.json`
+   - `/favicon.svg`
+   - `/icon-192.png`
+   - `/icon-512.png`
+   - `/sw.js`
+   - both newly generated hashed assets
+6. Confirm:
+   - visible release identity is `v22-f1`
+   - worker cache is `hometask-v22-f1`
+   - service worker installs and caches the exact generated asset paths
+   - v2 remains disabled
+   - startup produces no console errors
+   - `/api` remains reachable without mutating data
+7. Record the actual response headers. Missing custom security headers are an accepted known gap for this release; do not attempt an unverified configuration change.
+8. Do not create tasks, rooms, backups, restores, or imports during verification.
+
+Stop and notify immediately if:
+
+- the public origin changes;
+- `/api` stops working;
+- the release identity is wrong;
+- v2 is enabled;
+- the service worker fails;
+- production exposes development assets;
+- the application fails to start;
+- any data-loss or rollback ambiguity appears.
+
+Do not perform an automatic rollback after a successful deployment. If verification fails, preserve all evidence and request a decision before republishing an older checkpoint.
+
+After successful public verification:
+
+- Prepare—but do not execute—the exact physical-iPhone smoke-test checklist.
+- Mark the publishing task complete.
+- Report:
+  - task number
+  - terminal deployment status
+  - final public URL
+  - actual published JS/CSS hashes
+  - all public verification results
+  - `/api` status
+  - service-worker/cache result
+  - response headers observed
+  - confirmation that v2 stayed disabled
+  - confirmation that no user data was changed
+  - the deferred security-header gap
+  - the physical-iPhone checklist

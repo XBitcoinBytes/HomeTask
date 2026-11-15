@@ -1,0 +1,64 @@
+Begin one bounded release-hardening step for HomeTask. Do not publish or start the physical-iPhone test.
+
+Accepted baseline:
+
+- Steps 1–5 are complete.
+- Production build previously passed.
+- Full regression baseline: 30 suites, 1,447/1,447 checks passed, 0 failed or skipped.
+- v2 must remain disabled and isolated.
+- No live/iPhone data may be accessed or changed.
+
+A review of the current Replit URL found that HomeTask itself is release-capable, but the supplied URL is still a development preview. Address only these release-readiness findings:
+
+1. Production delivery
+   - Audit the production build and deployment configuration.
+   - Confirm the production output uses built, hashed JavaScript and CSS assets.
+   - Confirm it does not serve `/@vite/client`, raw `/src/script.js`, development error overlays, or development source maps.
+   - Verify that the service worker’s expected asset pattern matches the actual production output.
+   - Do not deploy during this step.
+
+2. Release identity
+   - Replace the user-facing/internal release identifier `v21-repository-test` with a clean F1 release identifier.
+   - Update directly related service-worker cache naming if required.
+   - Remove or correct stale version comments.
+   - Do not change product behavior or data formats.
+
+3. Accessibility contrast
+   - Measure the contrast of `--text-3` and any functional controls using `--text-4` against every background where they appear.
+   - Adjust only colors that fail WCAG AA for their actual text size or make an interactive affordance unreasonably faint.
+   - Preserve the existing graphite visual design.
+   - Disabled controls may remain appropriately subdued, but functional controls must be discoverable.
+
+4. Production security configuration
+   - Determine where this project can configure CSP, `X-Content-Type-Options`, Referrer-Policy, clickjacking protection via `frame-ancestors` or equivalent, Permissions-Policy, and HTTPS/HSTS.
+   - Add safe production configuration only where the repository or Replit deployment configuration supports it.
+   - Do not invent ineffective HTML substitutes for headers that must be sent by the host.
+   - Clearly report any header that must be configured during deployment instead of in code.
+
+Workflow:
+
+- First perform a read-only audit and report PASS/GAP for each item.
+- If no ambiguity or data risk exists, implement only the smallest reversible fixes needed.
+- Do not create multiple tasks. Use one bounded release-hardening task.
+- Do not modify custom-task, custom-room, backup, restore, migration, or v2 behavior.
+- Do not touch live data.
+- Do not publish.
+- Run syntax/static checks and only the focused suites directly affected by the changes.
+- Then run the production build.
+- Run the complete regression exactly once afterward.
+- Do not rerun the full suite to correct reporting; calculate the suite/check ledger from the captured output.
+- Stop immediately for an unexplained regression, service-worker/build mismatch, inability to preserve the accepted F1 behavior, or a deployment requirement that cannot safely be handled in this repository.
+
+Return a concise evidence report containing:
+
+- Exact files changed and why
+- PASS/GAP result for all four areas
+- Focused-test results
+- Production-build result
+- Exact full-regression suite/check totals
+- Confirmation that v2 remains disabled
+- Confirmation that no live data was accessed
+- Remaining deployment-only configuration, if any
+- Explicit statement that nothing was published
+
+Do not begin the publish step or the physical-iPhone smoke test.

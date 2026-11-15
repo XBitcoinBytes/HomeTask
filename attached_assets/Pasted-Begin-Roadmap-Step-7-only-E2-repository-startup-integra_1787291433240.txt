@@ -1,0 +1,80 @@
+Begin Roadmap Step 7 only: E2 repository/startup integration with v2 disabled.
+
+This is a planning and read-only audit step. Do not edit code, build, run tests, restart workflows, publish, access application data, activate v2, or run any migration.
+
+Accepted baseline:
+
+- F1 `v22-f1` is published successfully on the existing Autoscale deployment.
+- Public URL: `https://web-starter-kit-shipouts.replit.app`
+- `/api/healthz` is healthy.
+- Service-worker cache: `hometask-v22-f1`
+- Regression baseline: 31 suites, 1,456/1,456 checks passed.
+- F1 persistence, custom tasks, safe deletion/Undo, custom-room lifecycle, backup, accessibility automation, and release hardening are accepted.
+- Physical-iPhone loading, persistence, deletion/Undo, built-in protection, and backup export passed.
+- Physical VoiceOver testing is deferred.
+- Room creation works through Home → Browse Rooms → Create a room; discoverability is a future UI improvement.
+- Security headers are a deferred post-release hardening item.
+- Do not reopen any completed F1 task or begin either deferred item.
+
+Step 7 objective:
+
+Complete E2 repository/startup integration while keeping v2 disabled and preserving all F1 behavior and data.
+
+Audit:
+
+1. Locate the existing E2 design notes, repository interfaces, adapters, composition root, startup wiring, feature flags, migration code, shadow components, and relevant tests.
+
+2. Trace the complete current startup path:
+   - application entry point;
+   - repository construction;
+   - v1 repository;
+   - any v2 repository or adapter;
+   - backup facade/service;
+   - mutation writer;
+   - composition/startup selection;
+   - feature-flag evaluation;
+   - UI/controller dependencies.
+
+3. Prove the current disabled behavior:
+   - `V2_ACTIVATION_ENABLED` is false;
+   - startup selects the existing v1 behavior;
+   - no v2 migration, shadow write, cutover, recovery, or rollback action runs;
+   - no live data is read, rewritten, normalized, or deleted by E2 startup code;
+   - custom tasks and rooms remain supported through the accepted F1 path.
+
+4. Compare the current implementation with the intended E2 repository/startup contract.
+
+5. Identify only genuine E2 gaps needed so that:
+   - repository selection is explicit and centralized;
+   - v2 remains disabled by default;
+   - disabled mode is behaviorally equivalent to the accepted v1 startup;
+   - no direct storage access bypasses the repository boundary;
+   - backup and restore continue using their accepted facade;
+   - imports remain acyclic and structurally authorized;
+   - startup failure safely retains or returns to v1;
+   - enabling v2 remains impossible through UI, URL parameters, stale storage, or accidental defaults.
+
+6. Audit whether existing tests already prove each requirement. Do not propose duplicate coverage.
+
+Return:
+
+- Current startup/repository flow
+- Exact E2 contract found in project documentation
+- PASS/GAP matrix
+- Exact files that would need changes
+- Exact existing tests covering each requirement
+- Minimal new or updated tests required
+- Explicit data-safety and rollback analysis
+- Confirmation that no migration or live-data operation is required for Step 7
+- Any ambiguity that must stop implementation
+
+Task handling:
+
+- Check for an existing active or proposed Step 7/E2 task.
+- Do not reuse a merged task.
+- If no duplicate exists and the scope is unambiguous, create exactly one proposed task titled:
+  `Integrate E2 repository startup with v2 disabled`
+- Do not attempt to assign or activate it.
+- Stop after reporting the proposed task number and state so the user can accept it manually.
+
+Do not implement Step 7 during this prompt.

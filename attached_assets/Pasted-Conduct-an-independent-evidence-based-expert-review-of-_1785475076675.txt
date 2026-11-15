@@ -1,0 +1,570 @@
+Conduct an independent, evidence-based expert review of the current HomeTask product and then create a gated five-step roadmap.
+
+PUBLIC PRODUCT
+
+https://web-starter-kit-shipouts.replit.app/
+
+IMPORTANT ROLE CLARIFICATION
+
+Simulate a multidisciplinary panel of senior experts. The panel includes three senior engineers with deep Apple-platform, iPhone, Safari, WebKit, PWA, and Human Interface Guidelines experience.
+
+These are expert review roles—not claims that the reviewers are currently employed by Apple or speaking for Apple.
+
+PRIMARY OBJECTIVE
+
+Determine:
+
+1. What HomeTask does well.
+2. What is confusing, broken, fragile, inaccessible, or unsafe.
+3. Whether HomeTask is worth continuing.
+4. The five highest-value next steps.
+5. The correct order in which to execute them.
+6. How each step should be implemented, tested, approved, and deployed without breaking existing behavior.
+
+DO NOT MODIFY ANYTHING YET
+
+The initial review phase is strictly read-only.
+
+During the initial review:
+
+- do not edit files
+- do not create files
+- do not install packages
+- do not change project configuration
+- do not modify storage
+- do not mark real tasks Done
+- do not Skip real tasks
+- do not import or restore data
+- do not trigger destructive recovery paths against real data
+- do not deploy
+- do not republish
+- do not accept Replit-generated task plans
+- do not begin implementing the roadmap
+
+Inspect the source, production build, existing tests, service worker, manifest, storage architecture, and public interface. Use isolated test data or mocks for anything that could modify user state.
+
+After presenting the audit, debate, vote, and roadmap, STOP and ask for explicit approval to begin Step 1.
+
+PRODUCT CONSTRAINTS
+
+HomeTask must remain:
+
+- vanilla HTML, CSS, and JavaScript
+- a local-first installable iPhone PWA
+- extremely simple for an older user
+- accessible with VoiceOver and large text
+- usable with reduced motion
+- optimized for iPhone Safari and Home Screen installation
+- safe with locally stored household history
+- visually premium, liquid-metallic, calm, and readable
+- free of frameworks unless the owner explicitly authorizes reconsideration later
+
+Do not recommend React, Vue, Next.js, TypeScript, a backend, accounts, synchronization, push notifications, or a framework migration merely because they are common choices.
+
+Recommend those only if evidence demonstrates that a specific validated requirement cannot reasonably be met by the existing architecture.
+
+CURRENT PRODUCT AREAS
+
+HomeTask currently includes or has recently worked on:
+
+- Home screen
+- Today, This Week, and All Tasks
+- room and zone filtering
+- task and room search
+- recent/common search concepts
+- status colors
+- Done behavior
+- Skip Today and Skip Week
+- Smart Start onboarding
+- task scheduling
+- room grouping
+- localStorage persistence
+- title normalization
+- catalog validation
+- export/import backup
+- malformed-storage recovery
+- staged atomic import
+- Undo Import
+- service-worker updates
+- hashed production assets
+- iPhone bottom sheets/dialogs
+- physical-iPhone testing
+- approximately 122 active tasks and 24 rooms/zones
+
+Do not assume that any feature works merely because it exists in source code or a prior report says it passed. Verify it.
+
+PANEL MEMBERS
+
+Create these eight independent expert reviewers.
+
+1. APPLE-PLATFORM ENGINEER A — SAFARI, WEBKIT, AND PWA ARCHITECTURE
+
+Focus on:
+
+- Safari and WebKit behavior
+- installed Home Screen PWA behavior
+- service workers
+- offline cold launch
+- update transitions
+- hashed assets
+- caching
+- safe areas
+- dynamic and visual viewport behavior
+- software keyboard behavior
+- native dialog/top-layer behavior
+- iPhone performance
+- portrait and landscape
+- standalone versus Safari differences
+
+2. APPLE-PLATFORM ENGINEER B — IPHONE INTERACTION AND HUMAN INTERFACE DESIGN
+
+Focus on:
+
+- Apple Human Interface Guidelines
+- navigation clarity
+- safe Home behavior
+- touch targets
+- hierarchy
+- task completion flow
+- discoverability
+- modal and bottom-sheet behavior
+- native-feeling interaction
+- whether gestures would help or harm
+- older-user usability
+- avoiding accidental actions
+- whether HomeTask feels like an app rather than a dark website
+
+3. APPLE-PLATFORM ENGINEER C — PERFORMANCE, RELIABILITY, AND PRODUCT ENGINEERING
+
+Focus on:
+
+- state management
+- rendering
+- DOM size
+- scroll behavior
+- event handling
+- stale references
+- modularity
+- maintainability
+- future catalog growth
+- editing architecture
+- recurrence architecture
+- failure recovery
+- regression risk
+- testability
+- whether the current vanilla architecture remains appropriate
+
+4. WEB ACCESSIBILITY AND VOICEOVER SPECIALIST
+
+Focus on:
+
+- WCAG 2.2
+- VoiceOver
+- focus order
+- focus restoration
+- dialog semantics
+- live regions
+- accessible names
+- large text
+- zoom
+- contrast
+- status communication
+- reduced motion
+- keyboard behavior
+- touch-target size
+- color-independent meaning
+- empty and error states
+- whether every actionable search result is actually actionable
+
+5. OLDER-ADULT UX AND COGNITIVE-ACCESSIBILITY SPECIALIST
+
+Focus on:
+
+- simplicity
+- cognitive load
+- calm wording
+- whether the user can recover when lost
+- Home and Today clarity
+- distinction between today’s workload and the complete catalog
+- search comprehensibility
+- room and task editing concepts
+- accidental complexity
+- legibility
+- whether instructions are self-evident
+- whether the interface feels trustworthy
+
+6. DATA-INTEGRITY, PRIVACY, AND APPLICATION-SECURITY ENGINEER
+
+Focus on:
+
+- localStorage ownership and isolation
+- parsing and validation
+- backup schema
+- import sanitization
+- prototype-pollution resistance
+- atomic import
+- staging
+- rollback
+- rollback failure
+- interrupted-import recovery
+- corrupt-data preservation
+- Undo Import
+- storage quota failures
+- HTML/script injection
+- unrelated-key protection
+- silent data-loss risks
+- whether automated regression coverage is sufficient
+
+7. SENIOR PRODUCT MANAGER AND HOUSEHOLD-WORKFLOW DESIGNER
+
+Focus on:
+
+- whether the product solves a real recurring problem
+- product-market usefulness
+- daily value
+- feature sequencing
+- household validation
+- avoiding premature backend work
+- seasonal recurrence
+- room/task editing
+- task and room template libraries
+- hospitality or hotel expansion
+- what should be deferred
+- what would make friends and family actually keep using it
+
+8. SENIOR QA, TEST-AUTOMATION, AND RELEASE ENGINEER
+
+Focus on:
+
+- test coverage
+- deterministic tests
+- mock storage
+- failure injection
+- WebKit testing
+- physical-device gaps
+- regression risks
+- upgrade paths
+- offline tests
+- deployment verification
+- stale asset detection
+- reproducible bug reports
+- release gates
+- rollback strategy
+
+INDEPENDENCE REQUIREMENT
+
+Each reviewer must inspect the evidence and form an independent opinion before seeing or adopting another reviewer’s conclusion.
+
+Do not manufacture consensus.
+
+Allow reviewers to disagree strongly.
+
+Separate:
+
+- verified fact
+- observed behavior
+- code-review finding
+- likely inference
+- unverified hypothesis
+- personal design preference
+
+Do not present assumptions as test results.
+
+REQUIRED INSPECTION
+
+Review:
+
+- current source files
+- production build output
+- public deployment
+- manifest
+- service worker
+- storage keys
+- backup and recovery modules
+- dialog and sheet architecture
+- search implementation
+- workload/count calculations
+- Today/Week/All filtering
+- Done and Skip rendering
+- room data
+- task data
+- catalog validation
+- automated tests
+- build configuration
+- production asset loading
+- public console output
+- mobile layout at 390×844
+
+When using external standards or current platform guidance:
+
+- prefer official Apple, WebKit, W3C, and WCAG sources
+- cite the precise source
+- distinguish official requirements from design recommendations
+
+NON-DESTRUCTIVE RUNTIME TESTS
+
+At minimum, test:
+
+- normal launch
+- Home navigation
+- Today
+- This Week
+- All Tasks
+- Browse Rooms
+- search opening at the top of the page
+- search opening after deep scrolling
+- search typing
+- search backspacing to empty
+- Clear Search
+- actionable search results
+- room selection
+- empty room states
+- future-task visibility
+- Skip visibility
+- Done visual state
+- background scroll locking
+- large document height
+- modal focus
+- room picker
+- Backup & Restore opening
+- first-load production assets
+- console errors and warnings
+- 390×844 horizontal overflow
+
+Do not change real task state while conducting the review.
+
+PHYSICAL-IPHONE LIMITATION
+
+Clearly identify anything that cannot be conclusively verified without a physical iPhone.
+
+Automated WebKit or a 390×844 viewport must not be described as equivalent to:
+
+- physical Safari
+- an installed Home Screen PWA
+- VoiceOver
+- the iOS keyboard
+- iOS share sheet
+- Files import
+- offline cold launch
+- large Dynamic Type
+- Reduce Motion
+- Safari browser-control expansion and collapse
+
+GRADING SYSTEM
+
+Each reviewer must independently assign:
+
+1. Overall letter grade: A through F, including plus or minus.
+2. Score out of 100.
+3. Confidence level: High, Medium, or Low.
+4. Separate grades for:
+   - usefulness
+   - daily clarity
+   - iPhone experience
+   - accessibility
+   - visual design
+   - reliability
+   - data safety
+   - performance
+   - maintainability
+   - readiness for friends and family
+5. Three strongest aspects.
+6. Three most serious problems.
+7. One no-nonsense answer:
+   - Continue
+   - Continue With Conditions
+   - Pause And Repair
+   - Stop
+
+Grades must be evidence-based and should not be inflated to be polite.
+
+ROUND ONE — INDIVIDUAL REVIEW SPEECHES
+
+Give each reviewer an individual opening statement.
+
+Each speech must include:
+
+- review findings
+- grade
+- reasoning
+- highest-risk issue
+- highest-value opportunity
+- recommended next three actions
+- what should explicitly not be built yet
+
+Do not reduce the speeches to one-line summaries. Each reviewer should make a substantive argument.
+
+ROUND TWO — CROSS-EXAMINATION
+
+Have every reviewer identify:
+
+- one other reviewer they strongly agree with
+- one conclusion they challenge
+- one risk they believe another reviewer underestimated
+- one proposed feature they would defer
+- one proposed repair they consider non-negotiable
+
+Let the challenged reviewer respond.
+
+ROUND THREE — STRUCTURED DEBATE
+
+Debate these questions:
+
+1. Should HomeTask open on Home or Today?
+2. Should Today include overdue and unresolved safety tasks?
+3. How deeply should future tasks be buried?
+4. Should total task count remain visible?
+5. Is Search currently a primary tool or a secondary tool?
+6. Should Search use a bottom sheet, full-screen view, or inline expansion?
+7. Is the current visual design premium enough?
+8. Should visual redesign happen before or after editing architecture?
+9. Should task and room editing be the next major feature?
+10. Should seasonal recurrence be implemented with editing or separately?
+11. Should a 100-zone and 200-task template library be built now?
+12. Are custom swipe gestures appropriate?
+13. Is the data-safety system sufficiently tested?
+14. Is the app ready to share with friends and family?
+15. What evidence must exist before considering accounts or synchronization?
+
+For every debated question, provide:
+
+- supporting argument
+- opposing argument
+- dependency considerations
+- risk
+- final panel disposition
+- dissenting opinion, if any
+
+ROADMAP CANDIDATES
+
+Each reviewer must nominate up to five roadmap candidates.
+
+Merge duplicates, but preserve meaningful differences.
+
+Score every candidate from 1–10 on:
+
+- user impact
+- risk reduction
+- dependency urgency
+- usability improvement
+- accessibility improvement
+- implementation risk
+- effort
+- testability
+- reversibility
+- value for physical-iPhone testing
+
+Explain the scoring.
+
+VOTING
+
+Conduct a transparent vote.
+
+Each reviewer receives:
+
+- five ranked votes
+- first choice = 5 points
+- second choice = 4 points
+- third choice = 3 points
+- fourth choice = 2 points
+- fifth choice = 1 point
+
+Display each reviewer’s ballot.
+
+Display totals.
+
+Do not manipulate the vote to force consensus.
+
+After voting, allow each reviewer one final objection or endorsement.
+
+FINAL FIVE-STEP ROADMAP
+
+Produce exactly five ordered steps.
+
+For each step provide:
+
+- concise objective
+- why it is ranked here
+- user-visible outcome
+- technical scope
+- explicit non-goals
+- files or modules likely affected
+- storage or migration impact
+- accessibility requirements
+- physical-iPhone tests
+- automated tests
+- failure and rollback plan
+- deployment gate
+- definition of done
+- estimated complexity:
+  - Small
+  - Medium
+  - Large
+- confidence level
+- dependencies
+- risks
+- what must be approved by the owner before implementation
+
+Do not combine several major features into one vague “step.”
+
+Each step must be independently testable and deployable.
+
+MASTER VERDICT
+
+Conclude with:
+
+1. Panel-average grade.
+2. Grade range.
+3. Majority verdict.
+4. Strongest dissent.
+5. Whether HomeTask is worth pursuing.
+6. Whether it is ready for the owner’s personal daily use.
+7. Whether it is ready to share with friends and family.
+8. Whether it is ready for hotel or staff use.
+9. The single most important next action.
+10. The most tempting feature that should still be deferred.
+
+EXECUTION PROTOCOL
+
+After presenting the audit, debate, vote, and five-step roadmap:
+
+STOP.
+
+Do not implement Step 1.
+
+Ask:
+
+“Do you approve Roadmap Step 1 exactly as scoped, or would you like to revise it?”
+
+Only after explicit owner approval may implementation begin.
+
+When Step 1 is approved:
+
+1. Restate its scope and non-goals.
+2. Explain the implementation plan in plain language.
+3. Identify data, migration, and rollback risks.
+4. Ask for any required destructive-action confirmation.
+5. Implement only Step 1.
+6. Run its automated tests.
+7. Test the development build.
+8. Present the results.
+9. Do not publish until the owner explicitly approves publication.
+10. After publication, verify the public URL.
+11. Present physical-iPhone retest instructions.
+12. Stop and ask for approval before beginning Step 2.
+
+Repeat the same approval gate for Steps 2–5.
+
+At no point may approval of one step be interpreted as approval of later steps.
+
+COMMUNICATION STYLE
+
+- Be direct.
+- Be specific.
+- Avoid vague praise.
+- Explain technical findings in understandable language.
+- Do not bury critical defects.
+- Do not overwhelm the owner with unnecessary implementation jargon.
+- Preserve minority opinions.
+- Clearly label verified facts versus hypotheses.
+- Prefer product clarity and data safety over novelty.

@@ -1,0 +1,65 @@
+CP5C-A1 is approved for implementation with these requirements:
+
+1. Correct setAndVerify rollback
+
+- If prevBytes is a string, restore with setItem and verify readback.
+- If prevBytes is null, restore with removeItem and verify getItem returns null.
+- Never pass null to localStorage.setItem.
+- Never ignore rollback failure.
+- Return distinct codes:
+  write_failed
+  readback_mismatch_restored
+  readback_mismatch_restore_failed
+
+2. Distinguish missing keys from storage read failures
+
+The adapter must not convert a thrown getItem() into null. That could make a transient storage failure look like first use and cause defaults to overwrite existing data.
+
+Use a structured read result or preserve the exception distinction.
+
+On read failure:
+
+- return safe in-memory defaults;
+- do not seed or overwrite the affected key;
+- mark the repository degraded/read-only for that key;
+- subsequent writes to that key must fail calmly until a successful read or reload;
+- include tests proving existing bytes remain untouched.
+
+3. Harden parsing
+
+Test and safely handle valid JSON with the wrong shape:
+
+- hometask-v1 object/null/string instead of array
+- meta array/string/null instead of object
+- recents object/string/null instead of array
+- malformed task entries
+
+Do not allow saved.map() or recents.filter() to throw.
+
+Ensure variables needed in catch blocks are declared in the correct scope.
+
+4. Differential parity evidence
+
+Do not rely only on manually copied expected behavior. Add golden fixtures or a differential harness that runs current production v1 behavior and V1Repository against identical inputs and compares:
+
+- returned task/prefs/recents values
+- exact persisted bytes
+- catalog-authoritative merge behavior
+- malformed-storage behavior
+- first-use behavior
+
+Use the real catalog for at least one complete 122-task parity case.
+
+5. Test integration
+
+Place the test in the normal tests directory and add it to tests/run-all.mjs. Updating the test runner is the only existing-file change permitted.
+
+Run:
+
+- the new repository suite;
+- the complete existing suite;
+- import-order/disconnection checks.
+
+Report exact per-suite totals and arithmetic.
+
+Remain disconnected: do not modify script.js, app modules, production behavior, APP_BUILD, service worker, or V2_ACTIVATION_ENABLED. Do not build, publish, or begin CP5C-A2. Stop with the CP5C-A1 evidence report.

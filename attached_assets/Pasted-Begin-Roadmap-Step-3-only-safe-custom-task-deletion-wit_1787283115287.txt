@@ -1,0 +1,141 @@
+Begin Roadmap Step 3 only: safe custom-task deletion with confirmation and a five-second undo period.
+
+Use the existing Task #19 proposal if it can be activated. Do not create a duplicate task unless the workflow requires replacing the inactive proposal. Assign the single approved task to yourself and proceed in Build mode.
+
+Accepted baseline:
+
+- Step 1 and Step 2 are complete.
+- 28 suites and 1,423/1,423 checks pass.
+- Custom-task creation works in existing rooms at iPhone viewport sizes.
+- v1 custom-data load/save/restart/backup/restore preservation is verified.
+- v2 remains disabled.
+- No live/iPhone data may be accessed or changed.
+- Nothing should be published during this step.
+
+Scope:
+
+Allow users to delete custom tasks safely while making built-in tasks undeletable at every layer.
+
+Before editing:
+
+1. Inspect the custom-task model, v1 repository, rendering code, existing dialog/toast patterns, accessibility conventions, and tests.
+2. Identify the smallest deletion implementation consistent with the existing architecture.
+3. Reuse the established v1 repository and custom-record contract. Do not write directly to browser storage.
+4. Briefly state the implementation plan, then proceed unless you find data-loss risk, architectural ambiguity, or required scope expansion.
+5. Do not repeatedly inspect unchanged files or create additional planning tasks.
+
+Required behavior:
+
+- Delete controls appear only for valid `_custom: true` tasks.
+- Built-in tasks never display an enabled delete control.
+- Model/repository deletion must independently reject built-in IDs even if called outside the UI.
+- Activating delete opens an accessible confirmation dialog identifying the exact task.
+- Cancelling or dismissing confirmation changes no data.
+- Confirming removes the custom task from the visible UI and starts an undo opportunity lasting exactly five seconds.
+- The undo notice clearly identifies the deleted task and exposes an accessible Undo control.
+- Undo within five seconds restores the complete original task without losing:
+  - identifier
+  - title
+  - room assignment
+  - interval
+  - supported task state
+  - tags
+  - safe preserved unknown fields
+  - relevant visible room/filter context
+- Choose the safest reversible persistence design. Prefer deferring permanent repository deletion until the five-second undo period expires so an app close or reload during the window cannot lose the task.
+- If the app reloads or closes before permanent deletion is written, the task must remain present.
+- After the five-second period expires, persist deletion of exactly that custom task.
+- If permanent deletion fails:
+  - restore the task in the UI,
+  - retain its complete data,
+  - show an accessible error,
+  - leave all other tasks and stored bytes unchanged.
+- Prevent duplicate delete confirmations, repeated confirmation taps, and duplicate persistence writes.
+- Use a deterministic/fake clock in automated tests; do not make tests wait five real seconds.
+- Manage focus correctly:
+  - confirmation opens with sensible focus,
+  - cancellation returns focus to the initiating control,
+  - Undo receives an accessible name,
+  - after undo, focus returns to a sensible restored-task control or location,
+  - after expiry, focus moves to a stable nearby control.
+- Confirmation and Undo controls must remain usable at an iPhone-sized viewport with comfortable touch targets.
+- Deleting one custom task must not remove its room or any neighboring task.
+- Existing task creation and Step 1 preservation behavior must not regress.
+
+For this bounded step, allow only one pending deletion/undo operation at a time unless the existing architecture already has a proven, simpler multi-item pattern. While an undo is pending, prevent another deletion from corrupting or replacing its state.
+
+Explicitly out of scope:
+
+- built-in-task deletion
+- deleting or editing rooms
+- custom-room lifecycle work
+- task editing
+- bulk deletion
+- changing the five-second duration
+- v2 activation or migration
+- unrelated UI redesign
+- publishing
+- live/iPhone data access
+- Roadmap Step 4 or later
+
+Focused tests must cover:
+
+- built-in delete control absent or disabled
+- direct model/repository rejection of built-in deletion
+- confirmation identifies the exact custom task
+- cancel/dismiss causes no mutation
+- confirm starts the five-second undo state
+- undo before expiry restores the complete task
+- expiry deletes exactly one custom task
+- reload/close during the undo window preserves the task
+- persistence failure restores the task and retains stored bytes
+- repeated taps do not duplicate writes
+- only one pending deletion is allowed safely
+- room and neighboring tasks remain unchanged
+- custom-task creation still works
+- reload/restart and backup/restore remain correct after deletion
+- keyboard, focus, labels, alerts, and announcements
+- narrow iPhone viewport and touch targets
+- Step 1 and Step 2 regression coverage
+
+Test sequence:
+
+1. Add and run only the new and directly affected focused suites.
+2. Repair only defects caused by this bounded Step 3 implementation.
+3. Once focused suites pass, perform one isolated synthetic browser journey at an iPhone-sized viewport.
+4. If that passes, run the complete regression suite exactly once.
+5. Do not repeatedly rerun unchanged tests or poll in a loop.
+
+Stop immediately and report instead of guessing if you encounter:
+
+- possible deletion of built-in or live data
+- incomplete restoration of a custom record
+- ambiguous persistence semantics
+- a destructive requirement
+- an unexplained regression
+- scope expansion beyond custom-task deletion and undo
+- any need to enable v2
+
+When finished, stop and provide one concise evidence report containing:
+
+- implementation summary
+- exact files changed
+- UI and repository built-in protections
+- confirmation-dialog behavior
+- precise five-second timing and fake-clock evidence
+- undo restoration equality evidence
+- reload/close-during-undo behavior
+- expiry persistence behavior
+- deletion-failure rollback evidence
+- duplicate-action and single-pending-operation behavior
+- keyboard, focus, accessibility, mobile, and touch-target evidence
+- isolated browser journey result
+- focused-suite names and exact totals
+- exact full-suite totals with zero failures and skips accounted for
+- confirmation that Step 1 and Step 2 remain green
+- confirmation that v2 remains disabled
+- confirmation that no live/iPhone data was accessed or changed
+- confirmation that nothing was published
+- remaining risks
+
+Do not begin custom-room lifecycle work, publish, or start any later roadmap step. Wait for approval after the evidence report.

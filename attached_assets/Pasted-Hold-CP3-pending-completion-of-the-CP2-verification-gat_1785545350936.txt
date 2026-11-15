@@ -1,0 +1,122 @@
+Hold CP3 pending completion of the CP2 verification gate.
+
+The module extraction appears sound, and no redesign or rollback is requested. Please complete the missing verification and reporting requirements before CP2 is accepted.
+
+Do not begin CP3, modify storage formats, activate v2, change the service worker, build production assets, publish, or create Replit project tasks.
+
+1. Complete the Missing Playwright Scenarios
+
+Using an isolated browser context at 390×844, verify and report each scenario individually:
+
+- Returning-user launch opens Home
+- Home workload count exactly agrees with Today
+- Today → This Week → All Tasks navigation
+- Today membership excludes future tasks
+- This Week includes the expected coming-due tasks
+- Search opens fully inside the viewport
+- Search for “Kitchen”
+- Search for “bathroom”
+- Backspace/delete to an empty query restores suggestions cleanly
+- Search-result navigation
+- Room picker opens
+- Room picker search
+- Select a room
+- Close and reopen the room picker
+- Done behavior and resulting status/count change
+- Skip Today behavior
+- Skip Week behavior
+- Skip controls absent on future tasks
+- Skip controls absent on completed-today tasks
+- Room filter and view filter compose correctly
+- Search and room filtering compose correctly
+- Backup & Restore opens and closes
+- A backup envelope can be constructed
+- Canceling an import changes no storage
+- HomeTask brand button returns safely to Home
+- Dialog background scrolling is locked
+- Escape closes dialogs where supported
+- Focus returns to the triggering control after dialog close
+- No console errors or unhandled promise rejections
+- No horizontal overflow
+
+Use disposable test storage. Do not touch production or personal data.
+
+If a scenario cannot be automated reliably, label it clearly as requiring physical-iPhone verification rather than silently omitting it.
+
+2. Add an Import-Order Regression Guard
+
+The extraction made startup safety dependent on module evaluation order. The current one-time verification script is not sufficient protection against a future import edit.
+
+Add a development/test-only structural test proving that:
+
+- Interrupted-import/staging recovery executes before any module can read HomeTask storage.
+- Storage consumers cannot be imported or initialized before startup recovery completes.
+- The test does not execute against live browser storage.
+- A deliberately invalid import order causes the test to fail.
+
+Do not remove the reportedly redundant entry import during CP2.
+
+3. Confirm Runtime Disconnection From V2
+
+Provide a static import-graph result confirming:
+
+- No production runtime entry or src/app module imports src/v2.
+- No src/v2 migration, recurrence, composition, or envelope code executes during application startup.
+- The running application still reads and writes only the current v1 application keys.
+
+4. Storage-Key Comparison
+
+List every HomeTask-owned localStorage and sessionStorage key referenced before and after CP2.
+
+Confirm:
+
+- No key was renamed.
+- No key was added or removed.
+- No read/write order changed where transaction safety depends on it.
+- Import staging, recovery, backup snapshot, and undo keys are unchanged.
+
+5. Module Responsibility and Dependency Report
+
+Provide:
+
+- One-line responsibility for each of the 19 modules.
+- A concise dependency map.
+- Confirmation that the graph has no cycles.
+- Startup sequence before and after the split.
+- Identification of every module with import-time side effects.
+
+6. Per-Checkpoint Evidence
+
+Report CP2A–CP2G separately:
+
+- Files extracted
+- Tests run
+- Pass/fail result
+- Any issue discovered and corrected
+
+If the work was performed in fewer mechanical batches, state that honestly and map those batches to the intended checkpoints. Do not manufacture checkpoint history.
+
+7. Final Verification
+
+After completing the missing checks, rerun:
+
+- backup suite
+- workload suite
+- v2 suite
+- import-order regression test
+- complete Playwright smoke suite
+
+Report exact totals.
+
+Also reconfirm:
+
+- src/script.js remains the v19 entry.
+- The service worker remains hometask-v19.
+- public/ and dist/ remain unchanged.
+- Nothing was published.
+- No production build identifier changed.
+- No Replit project task was created.
+
+Stop after the supplemental CP2 report and ask:
+
+“Do you approve CP2 as completed and authorize CP3, or would you like corrections first?”

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#050507" />
+    <meta name="description" content="HomeTask — home maintenance and cleaning reminders" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HomeTask" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="manifest" href="manifest.json" />
+    <title>HomeTask</title>
+    <!-- CSS is imported via src/script.js so Vite emits a content-hashed
+         /assets/index-[hash].css that is always paired with the JS bundle.
+         Do NOT add a manual <link> here — Vite injects it automatically. -->
+  </head>
+  <body>
+
+    <div id="app">
+
+      <!-- ── Header ─────────────────────────────────────── -->
+      <header class="app-header" role="banner">
+        <div class="header-inner">
+          <div class="header-text">
+            <!-- HomeTask brand: tapping always navigates to the calm Home screen -->
+            <button class="app-title" id="home-btn" aria-label="Go to HomeTask Home">HomeTask</button>
+            <p class="app-subtitle" id="attention-count" aria-live="polite"></p>
+            <p class="app-progress" id="progress-count" aria-live="polite"></p>
+            <!-- Total-catalog button — small secondary control, dynamic count -->
+            <button class="total-tasks-btn" id="total-tasks-btn" hidden
+                    aria-label="View all tasks"></button>
+          </div>
+          <!-- Backup button — 44×44pt touch target, top-right of header -->
+          <button class="backup-btn" id="backup-btn"
+                  aria-label="Backup and restore"
+                  aria-haspopup="dialog">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <!-- Box body -->
+              <polyline points="21 8 21 21 3 21 3 8"/>
+              <!-- Lid -->
+              <rect x="1" y="3" width="22" height="5" rx="1"/>
+              <!-- Down arrow into box -->
+              <line x1="12" y1="12" x2="12" y2="17"/>
+              <polyline points="9 15 12 18 15 15"/>
+            </svg>
+          </button>
+        </div>
+        <div class="header-progress-track" aria-hidden="true">
+          <div class="header-progress-fill" id="progress-bar"></div>
+        </div>
+      </header>
+
+      <!-- ── Home screen ─────────────────────────────────── -->
+      <!-- Shown on every normal launch and when tapping the
+           HomeTask brand button. Hierarchy:
+             primary   → Today (dominant, shows attention count)
+             secondary → This Week · Browse Rooms
+             tertiary  → All N Tasks · Backup & Restore -->
+      <section id="home-screen" class="home-screen" hidden aria-label="HomeTask Home">
+        <nav class="home-nav" aria-label="Go to">
+
+          <!-- PRIMARY: Today — full-width, dominant -->
+          <button class="home-primary" id="home-to-today">
+            <svg class="hp-icon" xmlns="http://www.w3.org/2000/svg" width="30" height="30"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span class="hp-text">
+              <span class="hp-title">Today</span>
+              <span class="hp-count" id="home-today-count" aria-live="polite"></span>
+            </span>
+            <svg class="hp-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+
+          <!-- SECONDARY: This Week · Browse Rooms -->
+          <div class="home-secondary">
+            <button class="home-nav-btn" id="home-to-week">
+              <svg class="hnb-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+                <line x1="8" y1="14" x2="16" y2="14"/>
+              </svg>
+              <span class="hnb-label">This Week</span>
+            </button>
+
+            <button class="home-nav-btn" id="home-to-rooms">
+              <svg class="hnb-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                   viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+              </svg>
+              <span class="hnb-label">Browse Rooms</span>
+            </button>
+          </div>
+
+          <!-- TERTIARY: All Tasks (dynamic label) · Backup & Restore -->
+          <div class="home-tertiary">
+            <button class="home-link" id="home-to-all">
+              <span id="home-all-label">All Tasks</span>
+            </button>
+            <button class="home-link" id="home-to-backup">
+              Backup &amp; Restore
+            </button>
+          </div>
+
+        </nav>
+      </section>
+
+      <!-- ── Controls (view tabs + room picker + search) ── -->
+      <div class="controls" id="controls" role="toolbar" aria-label="View controls">
+
+        <!-- View selector: Today / This Week / All Tasks -->
+        <div class="controls-view-row">
+          <div class="view-tabs" id="view-tabs" role="radiogroup" aria-label="Task view">
+            <button class="view-tab" id="view-tab-today"
+                    role="radio" aria-checked="true" tabindex="0">Today</button>
+            <button class="view-tab" id="view-tab-week"
+                    role="radio" aria-checked="false" tabindex="-1">This Week</button>
+            <button class="view-tab" id="view-tab-all"
+                    role="radio" aria-checked="false" tabindex="-1">All Tasks</button>
+          </div>
+        </div>
+
+        <!-- Room picker + compact search button row -->
+        <div class="controls-second-row">
+          <!-- Room picker trigger button -->
+          <button class="room-picker-btn" id="room-picker-btn"
+                  aria-haspopup="dialog"
+                  aria-expanded="false"
+                  aria-label="Filter by room — currently showing All rooms">
+            <svg class="room-picker-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                 viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            <span class="room-picker-label" id="room-picker-label">All rooms</span>
+            <svg class="room-picker-chevron" xmlns="http://www.w3.org/2000/svg" width="11" height="11"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          <!-- Compact search button (44×44 touch target, magnifying glass) -->
+          <button class="search-icon-btn" id="search-btn"
+                  aria-label="Search tasks and rooms"
+                  aria-haspopup="dialog">
+            <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ── Task list ───────────────────────────────────── -->
+      <main id="task-list" aria-label="Task list">
+        <!-- Room groups injected by JS -->
+      </main>
+
+      <!-- ── Global empty state ─────────────────────────── -->
+      <div class="global-empty" id="global-empty" hidden role="status" aria-live="polite">
+        <p class="empty-icon" aria-hidden="true">🔍</p>
+        <p class="empty-title">No tasks match</p>
+        <p class="empty-body">Try a different search or clear the room filter.</p>
+        <button class="empty-action-btn" id="empty-action-btn" hidden></button>
+      </div>
+
+    </div><!-- /#app -->
+
+    <!-- ── Floating action button (F1 custom tasks) ── -->
+    <button class="fab" id="add-task-fab" type="button"
+            aria-label="Add new task"
+            aria-haspopup="dialog">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+
+    <!-- ── Undo toast (F1 delete) ── -->
+    <div class="ht-toast" id="ht-toast" role="status" aria-live="assertive"
+         aria-atomic="true" hidden>
+      <span class="ht-toast-msg" id="ht-toast-msg"></span>
+      <button class="ht-toast-undo" id="ht-toast-undo" type="button">Undo</button>
+    </div>
+
+    <!-- ── Safe custom-task deletion confirmation ── -->
+    <dialog class="dc-dialog" id="delete-confirm-dialog"
+            aria-labelledby="dc-title" aria-describedby="dc-message">
+      <div class="dc-card">
+        <h2 class="dc-title" id="dc-title">Delete task?</h2>
+        <p class="dc-message" id="dc-message"></p>
+        <p class="dc-error" id="dc-error" role="alert" hidden></p>
+        <div class="dc-actions">
+          <button class="dc-cancel" id="dc-cancel" type="button">Cancel</button>
+          <button class="dc-confirm" id="dc-confirm" type="button">Delete</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════
+         Add Task dialog — bottom sheet (F1)
+         Uses native <dialog> for focus trapping + Escape
+    ═══════════════════════════════════════════════════ -->
+    <dialog class="at-dialog" id="add-task-dialog" aria-labelledby="at-title">
+      <div class="at-sheet">
+        <div class="at-handle" aria-hidden="true"></div>
+        <div class="at-head">
+          <h2 class="at-title" id="at-title">Add Task</h2>
+          <button class="at-close" id="at-close" type="button"
+                  aria-label="Cancel adding task">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="at-body">
+          <form id="at-form" novalidate>
+            <!-- Task name -->
+            <div class="at-field">
+              <label class="at-label" for="at-title-input">Task Name</label>
+              <input type="text" id="at-title-input" class="at-input"
+                     placeholder="e.g. Clean windows"
+                     autocomplete="off" autocapitalize="sentences"
+                     autocorrect="off" spellcheck="false"
+                     maxlength="80" required aria-required="true"/>
+              <p class="at-error" id="at-title-error" role="alert" hidden></p>
+            </div>
+
+            <!-- Room -->
+            <div class="at-field">
+              <label class="at-label" for="at-room-select">Room</label>
+               <select id="at-room-select" class="at-select"
+                       aria-label="Select room" required aria-required="true"
+                       aria-describedby="at-room-error"></select>
+              <p class="at-error" id="at-room-error" role="alert" hidden></p>
+            </div>
+
+            <!-- Frequency -->
+            <div class="at-field">
+              <div class="at-label" id="at-frequency-label">Repeat Every</div>
+              <div class="at-freq-grid" role="group"
+                   aria-labelledby="at-frequency-label">
+                <button type="button" class="at-freq-btn"
+                        data-days="1" aria-pressed="false">Daily</button>
+                <button type="button" class="at-freq-btn at-freq-btn--active"
+                        data-days="7" aria-pressed="true">7 days</button>
+                <button type="button" class="at-freq-btn"
+                        data-days="14" aria-pressed="false">14 days</button>
+                <button type="button" class="at-freq-btn"
+                        data-days="30" aria-pressed="false">30 days</button>
+                <button type="button" class="at-freq-btn"
+                        data-days="90" aria-pressed="false">90 days</button>
+                <button type="button" class="at-freq-btn at-freq-btn--custom"
+                        data-days="custom" aria-pressed="false">Custom</button>
+              </div>
+              <div class="at-freq-custom" id="at-freq-custom-wrap" hidden>
+                <input type="number" id="at-freq-custom-input" class="at-input at-input--narrow"
+                       min="1" max="365" value="7"
+                        aria-label="Custom repeat interval in days"
+                        aria-describedby="at-freq-error"/>
+                <span class="at-freq-unit">days</span>
+              </div>
+              <p class="at-error" id="at-freq-error" role="alert" hidden></p>
+            </div>
+
+            <!-- Actions -->
+            <div class="at-actions">
+              <button type="submit" class="at-submit" id="at-submit">Add Task</button>
+              <button type="button" class="at-cancel-btn" id="at-cancel-btn">Cancel</button>
+            </div>
+            <p class="at-form-error" id="at-form-error" role="alert" hidden></p>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════
+         Onboarding dialog — first-use Smart Start
+         Uses native <dialog> for focus trapping + Escape
+    ═══════════════════════════════════════════════════ -->
+    <dialog class="ob-dialog" id="onboarding-dialog" aria-labelledby="ob-title">
+      <div class="ob-card">
+        <div class="ob-header">
+          <svg class="ob-logo" xmlns="http://www.w3.org/2000/svg" width="32" height="32"
+               viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+          <h2 class="ob-title" id="ob-title">Welcome to HomeTask</h2>
+        </div>
+
+        <p class="ob-body">
+          HomeTask tracks your home's recurring tasks. Choose a starting schedule —
+          this sets your first due dates only. Nothing is recorded as completed.
+        </p>
+
+        <div class="ob-choices">
+          <button class="ob-choice ob-choice--primary" id="ob-balanced" autofocus>
+            <span class="ob-choice-badge">Recommended</span>
+            <span class="ob-choice-title">Balanced Start</span>
+            <span class="ob-choice-desc">
+              Spreads your first due dates across the next 30 days so you're not
+              overwhelmed on day one. A few tasks fall due each day.
+            </span>
+          </button>
+
+          <button class="ob-choice" id="ob-current">
+            <span class="ob-choice-title">Everything is current</span>
+            <span class="ob-choice-desc">
+              Schedules each task's first due date at today plus its normal interval —
+              as if everything was just freshly done.
+            </span>
+          </button>
+        </div>
+
+        <div class="ob-safety-note" role="note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+               viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <span>
+            <strong>Safety tasks</strong> like smoke detector checks stay unconfirmed
+            and will need your explicit attention.
+          </span>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════
+         Search dialog — bottom sheet
+         Global search across all tasks, grouped by room.
+         Uses native <dialog> for focus trapping + Escape.
+    ═══════════════════════════════════════════════════ -->
+    <dialog class="sr-dialog" id="search-dialog" aria-labelledby="sr-title">
+      <div class="sr-sheet">
+        <div class="sr-handle" aria-hidden="true"></div>
+
+        <div class="sr-head">
+          <h2 class="sr-title" id="sr-title">Search</h2>
+          <button class="sr-close" id="sr-close" aria-label="Close search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="sr-input-wrap">
+          <svg class="sr-input-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="search" id="sr-input" class="sr-input"
+                 placeholder="Tasks, rooms, or categories…"
+                 aria-label="Search tasks and rooms"
+                 autocomplete="off" autocorrect="off" spellcheck="false"/>
+          <button class="sr-clear" id="sr-clear" hidden aria-label="Clear search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                 viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Scrollable body: populated by JS (idle state, results, or empty state) -->
+        <div class="sr-body" id="sr-body" role="region" aria-live="polite" aria-label="Search results"></div>
+
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════
+         Room picker dialog — searchable bottom sheet
+         Uses native <dialog> for focus trapping + Escape
+    ═══════════════════════════════════════════════════ -->
+    <dialog class="rp-dialog" id="room-picker-dialog" aria-labelledby="rp-title">
+      <div class="rp-sheet">
+        <div class="rp-handle" aria-hidden="true"></div>
+
+        <div class="rp-head">
+          <h2 class="rp-title" id="rp-title">Filter by room</h2>
+          <button class="rp-close" id="rp-close" aria-label="Close room filter">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="rp-search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               class="rp-search-icon" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="search" id="rp-search" class="rp-search"
+                 placeholder="Search rooms…"
+                 aria-label="Search rooms"
+                 autocomplete="off" autocorrect="off" spellcheck="false"/>
+        </div>
+
+        <button type="button" class="rp-create-room" id="rp-create-room">
+          Create a room
+        </button>
+
+        <ul class="rp-list" id="rp-list" role="listbox" aria-label="Rooms">
+          <!-- Populated by JS -->
+        </ul>
+      </div>
+    </dialog>
+
+    <!-- Custom room lifecycle: explicit empty rooms remain separate from task records. -->
+    <dialog class="at-dialog cr-dialog" id="create-room-dialog" aria-labelledby="cr-title">
+      <div class="at-sheet cr-sheet">
+        <div class="at-handle" aria-hidden="true"></div>
+        <div class="at-head">
+          <h2 class="at-title" id="cr-title">Create a room</h2>
+          <button type="button" class="at-close" id="cr-close" aria-label="Close create room">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="at-body">
+          <p class="cr-copy">Add an empty room now, then add tasks to it whenever you are ready.</p>
+          <form id="cr-form" novalidate>
+            <div class="at-field">
+              <label class="at-label" for="cr-name-input">Room name</label>
+              <input type="text" id="cr-name-input" class="at-input"
+                     maxlength="50" autocomplete="off" autocapitalize="words"
+                     aria-describedby="cr-error" placeholder="For example, Workshop"/>
+              <p class="at-error" id="cr-error" role="alert" hidden></p>
+            </div>
+            <div class="at-actions">
+              <button type="submit" class="at-submit" id="cr-submit">Create room</button>
+              <button type="button" class="at-cancel-btn" id="cr-cancel">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="dc-dialog" id="delete-room-dialog"
+            aria-labelledby="dr-title" aria-describedby="dr-message">
+      <div class="dc-card">
+        <h2 class="dc-title" id="dr-title">Delete room?</h2>
+        <p class="dc-message" id="dr-message"></p>
+        <p class="dc-error" id="dr-error" role="alert" hidden></p>
+        <div class="dc-actions">
+          <button class="dc-cancel" id="dr-cancel" type="button">Cancel</button>
+          <button class="dc-confirm" id="dr-confirm" type="button">Delete room</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ═══════════════════════════════════════════════════
+         Backup & Restore dialog — bottom sheet
+         Uses native <dialog> for focus trapping + Escape
+    ═══════════════════════════════════════════════════ -->
+    <dialog class="bk-dialog" id="backup-dialog" aria-labelledby="bk-title">
+      <div class="bk-sheet">
+        <div class="bk-handle" aria-hidden="true"></div>
+
+        <div class="bk-head">
+          <h2 class="bk-title" id="bk-title">Backup &amp; Restore</h2>
+          <button class="bk-close" id="bk-close" aria-label="Close Backup &amp; Restore">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Main body (shown by default) -->
+        <div class="bk-body" id="bk-body">
+          <p class="bk-desc">
+            Your HomeTask data is stored only on this device.
+            Save a backup so you can restore it later, or bring it to another device.
+          </p>
+          <p class="bk-last-export" id="bk-last-export" hidden></p>
+
+          <!-- Recovery notice — shown when damaged storage or an interrupted import was detected -->
+          <div class="bk-recovery" id="bk-recovery" hidden>
+            <p class="bk-recovery-msg" id="bk-recovery-msg"></p>
+            <div class="bk-actions">
+              <button class="bk-action-btn bk-action-btn--primary" id="bk-import-recovery-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Import Backup
+              </button>
+              <button class="bk-action-btn" id="bk-download-recovery-btn" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="8 17 12 21 16 17"/>
+                  <line x1="12" y1="21" x2="12" y2="9"/>
+                  <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>
+                </svg>
+                Download Recovery Data
+              </button>
+              <button class="bk-action-btn bk-action-btn--undo" id="bk-dismiss-recovery-btn">
+                Dismiss
+              </button>
+            </div>
+          </div>
+
+          <div class="bk-actions">
+            <button class="bk-action-btn bk-action-btn--primary" id="bk-export-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Export Backup
+            </button>
+
+            <button class="bk-action-btn" id="bk-import-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Import Backup
+            </button>
+
+            <button class="bk-action-btn bk-action-btn--undo" id="bk-undo-btn" hidden>
+              Undo Last Import
+            </button>
+          </div>
+
+          <!-- Shadow diagnostic section — always in DOM; hidden until flag enabled -->
+          <section id="bk-shadow-check" class="bk-shadow-check" hidden
+                   aria-labelledby="bk-shadow-heading">
+            <h3 id="bk-shadow-heading" class="bk-shadow-title">Upgrade Check</h3>
+            <p  id="bk-shadow-phase"   class="bk-shadow-status"
+                role="status" aria-live="polite" aria-atomic="true"></p>
+            <button id="bk-shadow-share-btn" class="bk-shadow-share"
+                    type="button" hidden>Share Report</button>
+          </section>
+        </div>
+
+        <!-- Confirmation panel (shown after file validation) -->
+        <div class="bk-confirm" id="bk-confirm" hidden>
+          <p class="bk-confirm-msg" id="bk-confirm-msg"></p>
+          <div class="bk-actions">
+            <button class="bk-action-btn bk-action-btn--danger" id="bk-restore-btn">
+              Restore This Backup
+            </button>
+            <button class="bk-action-btn" id="bk-cancel-btn">
+              Cancel
+            </button>
+          </div>
+        </div>
+
+        <!-- Status / feedback area -->
+        <p class="bk-status" id="bk-status" role="status" aria-live="polite"></p>
+
+        <!-- Quiet build identifier for physical-device update verification.
+             Kept in sync with public/sw.js cache name (hometask-v22-f1) and
+             the APP_BUILD constant in src/script.js. -->
+        <p class="bk-build" id="bk-build" aria-label="Build version">Build v22-f1</p>
+
+        <!-- Hidden file input — triggered programmatically by Import button -->
+        <input type="file" id="bk-file-input"
+               accept=".json,application/json"
+               aria-hidden="true" tabindex="-1"
+               style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,79 @@
+- No successfully committed active user task may have a null, missing, archived-without-policy, or nonexistent zone reference.
+- Duplicate normalized zone titles must be handled deterministically and reported.
+- Archival relationships must remain internally consistent.
+
+Add invariant tests after every successful import proving:
+
+- Every active task resolves to exactly one valid zone.
+- Every state record resolves to a valid active, archived, or retired task according to policy.
+- No quarantined record leaks into Today, This Week, All Tasks, Search, room lists, or workload calculations.
+- No dangling override remains.
+
+Correction 3 — Make Quarantine Durable and Honest
+
+Clarify and enforce what “quarantined in the report” means.
+
+An in-memory report that disappears after reload is not sufficient protection.
+
+Choose and document one safe policy:
+
+A. Reject the entire import if any user-owned record cannot be safely placed, preserving live data unchanged; or
+
+B. Permit a partial import only when:
+
+- Every quarantined record is preserved durably and verbatim in a bounded recovery/quarantine record.
+- The result explicitly reports that some records were not restored.
+- Unqualified “Restore successful” language is prohibited.
+- The user can later download the quarantine report/data.
+- Repeated imports do not silently overwrite an undownloaded quarantine record.
+- Storage-full failure while preserving quarantine aborts the import before live data changes.
+
+For CP3’s safety foundation, option A is preferred unless there is a compelling product reason for partial import.
+
+Unknown IDs from newer catalogs must produce a calm compatibility explanation rather than being described generically as malformed.
+
+Add tests proving no invalid or unknown user-owned record disappears while an import reports complete success.
+
+CP4 Planning Clarification
+
+After making the corrections, include a proposed CP4 execution plan that acknowledges browser-origin isolation:
+
+- A separate development URL cannot read localStorage belonging to the public production origin.
+- Therefore, a real shadow migration of existing iPhone data cannot be verified merely in dev preview.
+- Publishing shadow-migration code to the production origin requires separate explicit owner approval.
+
+Divide CP4 into these proposed gates:
+
+CP4A — Implement and test the shadow-migration runner while disconnected from runtime.
+
+CP4B — Wire it behind a disabled or one-purpose shadow-only release flag; the app still reads and writes v1 for normal operation.
+
+CP4C — The owner reviews all evidence and explicitly approves a shadow-only publication.
+
+CP4D — Publish only the approved shadow observer to the existing production origin, run it on the physical iPhone, and write v2 output to a dedicated staging key without activating it.
+
+CP4E — Produce a privacy-safe equivalence report containing counts and differences but no household task content. Verify that v1 remains authoritative and request approval before CP5.
+
+Do not treat CP4C publication as already authorized.
+
+After completing the CP3 corrections:
+
+- Rerun all 196 existing assertions plus the new tests.
+- Rerun the complete Playwright smoke suite.
+- Report exact new tests and final totals.
+- Confirm that v1 remains the active runtime format.
+- Confirm that src/v2 remains disconnected from the production runtime.
+- Confirm that SW v19, public assets, dist assets, and production remain unchanged.
+- Provide the corrected validation-outcome table.
+- Explain which quarantine policy was selected and why.
+- Provide the proposed CP4A–CP4E plan.
+- List every file added or changed.
+- Report any unresolved risks or physical-iPhone-only checks.
+
+Do not build production assets, change the service worker, publish, activate v2, migrate real data, or create Replit project tasks.
+
+Stop after the corrected CP3 report and ask:
+
+“Do you approve corrected CP3 and authorize CP4A only, or would you like further corrections?”
+
+Do not begin CP4 without explicit approval.

@@ -1,0 +1,51 @@
+Revise the CP5B plan only. Do not implement yet.
+
+1. Correct the startup map
+startup.js may restore hometask-v1 and hometask-meta-v1 from an interrupted import. Document every read AND write it can perform.
+
+Define the intentional sequence:
+
+A. legacy import-transaction recovery completes
+B. activation recovery runs
+C. authority/boot decision is made
+D. normal application state is loaded
+
+Explain why activation fingerprints the final post-import-recovery v1 state. Add tests for an abandoned import transaction followed by activation recovery.
+
+2. Do not fail open into writable v1
+The current plan always calls app.init(), including when:
+- committed-verified returns v2Active: true
+- recovery times out or throws
+- ambiguous_state occurs
+
+That is unsafe. Define an explicit boot-decision function:
+
+- disabled → boot v1 normally
+- clean/recovered pre-marker state with v2Active:false → boot v1
+- committed-verified with v2Active:true → do not boot writable v1; reserve for CP5C
+- ambiguous, failed, timeout, or indeterminate authority → do not boot writable v1
+
+Because the committed flag remains false, this causes no current user-visible change. Add tests proving unsafe enabled outcomes never invoke app.init().
+
+3. Correct the bridge contract
+Quote the exact recoverActivationStartup() signature from source.
+
+- Remove the unused CATALOG import unless the function actually requires it.
+- Reuse the authoritative SHA-256 helper instead of duplicating digest logic.
+- Pass the injected scheduler if recovery supports it.
+- Add an injected dynamic-module loader so tests can prove the disabled path performs zero dynamic imports.
+- Avoid result spreading that could accidentally overwrite the bridge status.
+
+4. Lazification completeness
+List every tasks.js function that directly or indirectly accesses _items. Add a structural test that fails if any access path lacks _ensureLoaded().
+
+5. Error propagation
+Preserve app.init() rejection behavior, but also test:
+- bridge disabled → app.init called once
+- safe v1 recovery result → app.init called once
+- v2 active/ambiguous/failed/timeout → app.init not called
+- shadow diagnostic runs only after successful app.init()
+
+6. Keep V2_ACTIVATION_ENABLED=false. No build, publish, UI change, APP_BUILD/SW change, CP5C work, or source edits.
+
+Return the corrected startup diagram, boot-decision table, exact file changes, test matrix, and risks. Stop for approval.

@@ -1,0 +1,50 @@
+Hold publication. One narrow CP4C discrepancy requires resolution.
+
+Do not perform another broad audit, change unrelated code, modify the catalog, change the flag, change the service worker, or publish.
+
+The browser report states that hometask-v2-shadow changed from 12,304 to 12,316 bytes on a second load because generatedAt changed. This appears to conflict with the established CP4A guarantee:
+
+- A genuine existing verified wrapper
+- With unchanged v1 source data
+- Must produce preservedExistingVerified: true
+- And leave the shadow bytes unchanged
+
+Run this exact browser reproduction against the production build:
+
+1. Seed known valid v1 task and preference data.
+2. Delete hometask-v2-shadow.
+3. Load once and wait for Verified.
+4. Record byte-exact raw values of:
+   - every v1 source key
+   - hometask-v2-shadow
+   - sourceFingerprint
+   - generatedAt
+5. Reload without any user action or storage mutation.
+6. Wait for completion and record the same values again.
+7. Confirm whether:
+   - every v1 key is byte-identical
+   - sourceFingerprint is identical
+   - the existing wrapper passes canonical isValidVerifiedWrapper()
+   - preservedExistingVerified is true
+   - hometask-v2-shadow is byte-identical
+   - generatedAt is unchanged
+
+If the shadow bytes change despite unchanged source data, identify the exact cause and implement only the minimal fix needed to restore CP4A preservation semantics. Add a browser or integration regression test covering two consecutive no-action loads.
+
+If the earlier length comparison came from different test contexts or changed v1 source data, demonstrate that concretely and correct the report; do not change code unnecessarily.
+
+Also correct Scenario 2’s wording:
+- Running → Verified live transition was not observed because completion occurred before the sheet opened.
+- Mark it “not observed in browser; covered by automated test,” not PASS.
+
+The service-worker browser test may remain pending for the controlled physical-iPhone rollout. Its source and unit-test evidence are accepted provisionally.
+
+Run the affected tests and then the full suite. Return no more than 300 words containing:
+- reproduction result
+- root cause
+- files changed, if any
+- new regression-test result
+- full suite total
+- confirmation that nothing was published
+
+Stop after reporting.

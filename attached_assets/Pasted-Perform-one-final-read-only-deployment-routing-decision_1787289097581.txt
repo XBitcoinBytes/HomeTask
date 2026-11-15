@@ -1,0 +1,48 @@
+Perform one final read-only deployment-routing decision for HomeTask. Do not edit files, create tasks, build, test, restart, publish, or access user data.
+
+Important correction:
+
+The cited Replit documentation is titled “Static Deployment Configuration” and states that its headers and rewrites apply to Static Deployments. It does not establish that `[[deployment.responseHeaders]]` works for Autoscale. Do not repeat the Autoscale-support claim without a separate official Replit source that explicitly names Autoscale.
+
+Determine:
+
+1. Why this browser-only static PWA is currently configured as Autoscale.
+2. Whether the workspace application router or other artifacts require Autoscale.
+3. Whether HomeTask can be published independently as a Replit Static Deployment while preserving:
+   - the `/` route
+   - SPA fallback to `/index.html`
+   - service-worker scope
+   - manifest and icons
+   - browser-local data
+   - the `v22-f1` release
+   - v2 disabled
+4. Whether changing the deployment target to Static would affect another artifact or the existing `web-starter-kit-shipouts.replit.app` deployment.
+5. The exact files/settings that a Static target would require.
+6. Whether Static Deployment supports the proposed real response headers, based on the official documentation.
+7. Whether any proposed CSP directive would block current inline styles, service-worker requests, manifest loading, or application behavior.
+8. The exact expected public URL and whether it would replace an existing deployment or create a separate one.
+9. The cost/availability implication, if visible in the current Replit publishing configuration.
+10. The safest rollback method for the deployment-target/configuration change.
+
+Publish-time rebuild policy:
+
+- A configured production rebuild is acceptable.
+- Do not require the old hashes to remain unchanged.
+- The release gate should instead require that the publish-time build:
+  - succeeds from the accepted source;
+  - produces exactly one hashed main JS and CSS asset;
+  - contains `v22-f1`;
+  - contains no development markers or source maps;
+  - preserves exact service-worker asset paths;
+  - leaves v2 disabled.
+- Record the new hashes and verify the public HTML against those hashes after publishing.
+
+Finish with one recommendation:
+
+A. `Use Static Deployment` — include the exact bounded configuration change and why it does not affect other artifacts.
+
+B. `Keep Autoscale` — provide an official Replit source explicitly confirming how real response headers are configured for Autoscale, or identify the supported server/edge mechanism.
+
+C. `Blocked` — state the exact information that only the user or Replit Publishing UI can supply.
+
+Stop after the report. Do not make changes or publish.

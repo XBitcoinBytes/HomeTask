@@ -1,0 +1,139 @@
+/**
+ * extract-catalog.mjs — mechanical, read-only extraction of the v1 catalog.
+ *
+ * Reads src/script.js (NEVER modifies it), evaluates the SEED_TASKS and
+ * SAFETY_TASK_IDS definitions in an isolated function scope, and writes the
+ * generated module src/v2/catalog.data.js.
+ *
+ * CP1 guardrail 2: the running app keeps using its own catalog inside
+ * script.js. This file only produces a duplicate representation for the
+ * pure v2 modules and their tests. A test re-runs extractCatalog() and
+ * compares it to the committed catalog.data.js so drift is impossible
+ * to miss.
+ *
+ * Usage:  node artifacts/home-tasks/scripts/extract-catalog.mjs
+ */
+
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const SRC  = join(HERE, '..', 'src', 'app', 'catalog.js');   // CP2: SEED_TASKS moved here in the module split
+const OUT  = join(HERE, '..', 'src', 'v2', 'catalog.data.js');
+
+/** Stable zone id from a room title: "Madi's Room" → "z_madis-room" */
+export function zoneIdFor(roomTitle) {
+  return 'z_' + roomTitle
+    .toLowerCase()
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** Extract SEED_TASKS + SAFETY_TASK_IDS from script.js source text. */
+export function extractCatalog(sourceText) {
+  // SEED_TASKS: from "const SEED_TASKS = [" to the first "];" at line start.
+  const startMarker = 'const SEED_TASKS = [';
+  const start = sourceText.indexOf(startMarker);
+  if (start === -1) throw new Error('SEED_TASKS not found in script.js');
+  const end = sourceText.indexOf('\n];', start);
+  if (end === -1) throw new Error('SEED_TASKS terminator not found');
+  const seedArrayLiteral = sourceText.slice(start + 'const SEED_TASKS ='.length, end + 3);
+
+  // SAFETY_TASK_IDS: single-line Set literal.
+  const safetyMatch = sourceText.match(/const SAFETY_TASK_IDS = new Set\((\[[^\]]*\])\)/);
+  if (!safetyMatch) throw new Error('SAFETY_TASK_IDS not found in script.js');
+
+  // Evaluate in an isolated function scope. Only _T is provided; no globals,
+  // no storage, no DOM. The literals contain only plain data + _T calls.
+  const _T = (id, title, room, intervalDays) =>
+    ({ id, title, room, intervalDays, tags: [], lastDone: null, doneToday: false, skipUntil: null });
+  // eslint-disable-next-line no-new-func
+  const seedTasks = new Function('_T', `'use strict'; return (${seedArrayLiteral.trim().replace(/;$/, '')});`)(_T);
+  // eslint-disable-next-line no-new-func
+  const safetyIds = new Function(`'use strict'; return (${safetyMatch[1]});`)();
+
+  // Zones in first-appearance order — mirrors ROOMS_ORDERED in script.js.
+  const roomTitles = [...new Set(seedTasks.map(t => t.room))];
+  const zones = roomTitles.map((title, i) => ({ id: zoneIdFor(title), title, sortOrder: i }));
+  const zoneIdByTitle = Object.fromEntries(zones.map(z => [z.title, z.id]));
+
+  const tasks = seedTasks.map(t => ({
+    id: t.id,
+    title: t.title,
+    zoneId: zoneIdByTitle[t.room],
+    recurrence: { kind: 'interval', unit: 'day', every: t.intervalDays },
+    safety: safetyIds.includes(t.id),
+    tags: [],
+  }));
+
+  return {
+    catalogVersion: 1,
+    zones,
+    tasks,
+    // Retired pre-v2 IDs. Last-known authoritative definitions recovered from
+    // repository history (CP1 correction 1):
+    //   • Full definitions present at commit 09a45bd (src/script.js SEED_TASKS,
+    //     `_T('<id>', 'Whole bathroom done', '<room>', 7)`).
+    //   • Retired in commit 4feea64 (2026-07-30, build hometask-v12) with the
+    //     in-source note: "Whole Bathroom Done removed — duplicated individual
+    //     tasks". None was ever in SAFETY_TASK_IDS; _T assigns tags: [].
+    tombstones: {
+      tasks: TOMBSTONE_DEFS.map(tb => ({
+        ...tb,
+        lastKnown: { ...tb.lastKnown, zoneId: zoneIdFor(tb.lastKnown.zoneTitle) },
+      })),
+      zones: [],
+    },
+  };
+}
+
+// Last-known definitions, transcribed verbatim from commit 09a45bd (not
+// guessed). Every field is evidence-backed; see the note above.
+const TOMBSTONE_RETIREMENT = Object.freeze({
+  date: '2026-07-30',
+  appBuild: 'hometask-v12',
+  sourceCommit: '4feea64',
+  evidenceCommit: '09a45bd',
+  reason: 'Whole Bathroom Done removed — duplicated individual tasks',
+});
+const TOMBSTONE_DEFS = [
+  { room: 'Master Bathroom', id: 'mbath-all' },
+  { room: 'Half Bath',       id: 'hb-all' },
+  { room: 'Madi Bath',       id: 'mdb-all' },
+  { room: 'Basement Bath',   id: 'bb-all' },
+].map(({ id, room }) => ({
+  id,
+  retired: { ...TOMBSTONE_RETIREMENT },
+  lastKnown: {
+    title: 'Whole bathroom done',
+    zoneTitle: room,
+    recurrence: { kind: 'interval', unit: 'day', every: 7 },
+    intervalDays: 7,
+    safety: false,
+    tags: [],
+  },
+}));
+
+export function generateModuleText(catalog) {
+  return `/**
+ * catalog.data.js — GENERATED by scripts/extract-catalog.mjs. Do not edit.
+ *
+ * Mechanical representation of the v1 catalog in src/script.js.
+ * The running application does NOT use this file (CP1 guardrail 2);
+ * it exists for the pure v2 modules and their tests. Regenerate with:
+ *   node artifacts/home-tasks/scripts/extract-catalog.mjs
+ */
+export const CATALOG = ${JSON.stringify(catalog, null, 2)};
+`;
+}
+
+// CLI entry
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const catalog = extractCatalog(readFileSync(SRC, 'utf8'));
+  mkdirSync(dirname(OUT), { recursive: true });
+  writeFileSync(OUT, generateModuleText(catalog));
+  console.log(`Wrote ${OUT}: ${catalog.tasks.length} tasks, ${catalog.zones.length} zones, ` +
+    `${catalog.tasks.filter(t => t.safety).length} safety, ${catalog.tombstones.tasks.length} task tombstones.`);
+}

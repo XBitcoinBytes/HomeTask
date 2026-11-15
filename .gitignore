@@ -1,0 +1,91 @@
+# Added for the GitHub archive of this Replit project
+# Dependencies and tool caches
+node_modules/
+.pythonlibs/
+.upm/
+.venv/
+venv/
+.cache/
+.parcel-cache/
+.vite/
+.turbo/
+.next/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# Build output
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+*.pyc
+__pycache__/
+
+# Logs and generated runtime data
+logs/
+*.log
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Replit / editor internals
+.config/
+.local/
+.DS_Store
+Thumbs.db
+
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+*.tsbuildinfo
+.expo
+.expo-shared
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Replit
+.cache/
+.local/

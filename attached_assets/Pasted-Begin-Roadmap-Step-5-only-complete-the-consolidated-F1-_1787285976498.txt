@@ -1,0 +1,55 @@
+Begin Roadmap Step 5 only: complete the consolidated F1 persistence, UI, accessibility, failure-path, backup, build, and full-regression acceptance gates.
+
+Create exactly one new task titled:
+
+“F1 consolidated acceptance gates”
+
+Do not reuse Task #18. Assign the new task to yourself and proceed. Do not create parallel tasks or delegate duplicate audits.
+
+Accepted baseline:
+
+- Steps 1–4 are complete.
+- 30 suites and 1,447/1,447 checks pass.
+- 0 failures and 0 skips.
+- v2 remains disabled.
+- No live/iPhone data may be accessed or changed.
+- Nothing should be published during Step 5.
+
+This is primarily an acceptance audit, not a new feature milestone.
+
+First, build a concise PASS/GAP matrix using existing code, tests, and captured evidence. Do not add duplicate tests for behavior already proven. Make changes only for a concrete uncovered gate or genuine defect.
+
+Required gates:
+
+Persistence:
+
+- Custom tasks survive v1 save, reload, restart, backup, and restore.
+- Explicit empty custom rooms survive the same paths.
+- Task relationships to built-in and custom rooms are preserved.
+- Task deletion and empty-room deletion persist correctly.
+- Reload during the five-second task Undo window safely preserves the task.
+- Built-in tasks and rooms remain authoritative and protected.
+- Safe unknown custom-task fields remain preserved.
+
+UI and mobile:
+
+- Create a custom task in a built-in room.
+- Create and select an empty custom room.
+- Create a task in a custom room.
+- Delete and Undo a custom task.
+- Permanently delete a custom task after five seconds.
+- Block deletion of a populated custom room with the exact task count.
+- Delete an empty custom room and fall back to a stable built-in room.
+- Validate the complete journey in one isolated 390×844 browser context.
+- Confirm no horizontal overflow, obscured actions, or console errors.
+- Do not use live or existing user storage.
+
+Accessibility:
+
+- Visible labels and accessible names are present.
+- Native dialogs have correct initial focus, containment, closure, and focus return.
+- Nested modal flows do not focus background controls.
+- Keyboard-only operation works.
+- Validation and persistence failures are announced.
+- Delete, Cancel, Undo, submit, room actions, and close controls meet 44px touch-target expectations where applicable.
+- Saving/b

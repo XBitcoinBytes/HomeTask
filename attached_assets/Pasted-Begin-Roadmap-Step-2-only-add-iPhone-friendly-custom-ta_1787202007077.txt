@@ -1,0 +1,99 @@
+Begin Roadmap Step 2 only: add iPhone-friendly custom task creation.
+
+Accepted baseline:
+
+- Task #16 / Step 1 is complete.
+- 27 suites and 1,413/1,413 checks pass.
+- v1 preserves valid custom data through load, save, restart, backup, and restore.
+- v2 remains disabled.
+- No live/iPhone data may be accessed or changed.
+- Nothing should be published during this step.
+
+Scope:
+
+Add an accessible, mobile-friendly interface for creating one custom task and assigning it to any valid existing room, including built-in rooms.
+
+Before editing:
+
+1. Inspect the existing custom-task model, v1 repository API, current UI structure, validation conventions, and mobile/accessibility tests.
+2. Identify the smallest natural location for the creation control and form.
+3. Reuse the established v1 repository and custom-record contract. Do not write directly to browser storage.
+4. Present a concise implementation plan, then proceed unless you find data-loss risk, architectural ambiguity, or required scope expansion.
+5. Do not create multiple planning tasks or repeatedly re-audit unchanged files.
+
+Required behavior:
+
+- The user can clearly discover and open the task-creation interface on an iPhone-sized screen.
+- Opening and cancelling the form changes no data.
+- Every input has a visible label and an accessible name.
+- Required values are validated before persistence.
+- Whitespace is normalized safely without changing meaningful content.
+- A collision-safe custom identifier is generated that cannot conflict with built-in or existing custom task IDs.
+- The user can assign the task to any valid existing room, including a built-in room.
+- Successful submission creates exactly one record marked `_custom: true` through the v1 repository.
+- The created task appears immediately in the correct room.
+- It survives save/reload, application restart, backup export, and restore.
+- Repeated taps or submissions while saving cannot create duplicates.
+- A persistence failure does not create a partial task, erase existing data, or discard the user’s entered values.
+- Failure is communicated with an accessible error message.
+- Focus moves appropriately when the interface opens, succeeds, fails, or closes.
+- Keyboard-only operation works.
+- Interactive controls have comfortable iPhone touch targets, with a target of at least 44×44 CSS pixels where applicable.
+- The form remains usable with the iPhone on-screen keyboard and at narrow viewport widths.
+- Existing built-in and custom tasks remain unchanged except for the newly created task.
+
+Choose the safest minimal behavior for ordinary naming, normalization, layout, and validation decisions. Report any material assumption in the final evidence.
+
+Explicitly out of scope:
+
+- custom-task deletion
+- confirmation or undo behavior
+- custom-room creation, editing, or deletion
+- editing existing tasks
+- v2 activation, migration, or repository cutover
+- unrelated UI redesign
+- publishing
+- live/iPhone data access
+- Roadmap Step 3 or later
+
+Testing:
+
+Add focused synthetic tests covering:
+
+- opening and cancelling without mutation
+- successful creation in a built-in room
+- identifier collision avoidance
+- required-field and whitespace validation
+- duplicate-submit prevention
+- repository write failure and retained form values
+- immediate rendering
+- reload/restart persistence
+- backup/restore preservation
+- keyboard and focus behavior
+- accessible labels, errors, and announcements
+- narrow iPhone viewport layout and touch targets
+- no regression to built-in-task authority or Step 1 preservation
+
+Test sequence:
+
+1. Run only the new and directly affected focused suites.
+2. Repair only defects caused by this bounded Step 2 implementation.
+3. Once focused suites pass, run the complete regression suite exactly once.
+4. Do not repeatedly rerun unchanged tests or poll in a loop.
+
+Stop immediately and report instead of guessing if you encounter:
+
+- possible data loss
+- a need to access live/iPhone data
+- ambiguous persistence or identifier semantics
+- a destructive requirement
+- an unexplained regression
+- scope expansion beyond task creation
+- any need to enable v2
+
+When finished, stop and provide one concise evidence report containing:
+
+- implementation summary
+- exact files changed
+- form fields and validation rules
+- identifier-generation and collisi

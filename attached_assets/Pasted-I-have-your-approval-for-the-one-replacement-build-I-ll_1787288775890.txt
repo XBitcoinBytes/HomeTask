@@ -1,0 +1,56 @@
+I have your approval for the one replacement build. I’ll restore only the two unintended metadata rules and move the accessible functional token to the three approved active controls, then run the narrow static check before rebuilding.
+
+
+
+3 actions
+The review confirms the approved scope: the two unintended changes are secondary labels at the earlier CSS rules, while .sr-group-room and .btn-delete remained unchanged. I’m applying only that four-line correction, then will run the single required static selector/contrast check.
+
+
+
+5 actions
+The CSS scope is corrected: .bk-build and .sr-section-title are back on the disabled/decorative token, while the three intended active controls use --text-3. I’m running the single targeted static check now, then the approved replacement production build.
+
+
+
+Ran a Node.js script
+The scoped CSS check passes at 4.67:1 on the worst active graphite surface. I’m producing the approved replacement production artifact now; it supersedes the first successful build solely because that build contained the earlier selector-scoping mistake.
+
+
+
+2 actions
+The replacement build succeeded with fresh rooted hashes. I’m running the post-build hardening suite against this authoritative artifact now; if it passes, the only remaining validation will be the single complete regression run.
+
+
+
+2 actions
+The authoritative post-build suite passes all six checks. I’m starting the complete regression now—exactly once, against the corrected source and replacement production artifact.
+
+
+
+2 actions
+The full regression completed once with no failures. I’m not rerunning it. I’m now collecting its ledger from the captured output, checking the final diff for whitespace/identity drift, and restarting the existing HomeTask workflow so the corrected client assets are served in the development preview.
+
+
+
+3 actions
+The workflow restart succeeded. The regression itself remains successful; only my read-only ledger parser had a tuple-conversion typo. I’m correcting that report-only parser now and checking the restarted workflow logs plus the final diff—without rerunning any validation suite.
+
+
+
+5 actions
+The workflow is running cleanly. The full-run output itself ended with ALL SUITES PASSED; my first report-only parser saw only the retained tail of the captured stream, and the identity scan incorrectly treated the new test’s negative assertions as old identifiers. I’m correcting those reporting checks without rerunning any suite.
+
+
+
+2 actions
+The retained command transcript confirms the final regression’s terminal success and zero failures; its first 18 suite headers were omitted by the shell-output retention, not by the runner. The complete ledger can still be reconciled from the accepted 30-suite baseline plus the captured 3 new worker checks and 6 new hardening checks. I’m completing final source/config hygiene now—still without rerunning tests.
+
+
+
+2 actions
+All requested validation is complete and the HomeTask workflow is running. I’m completing the required completion review now, including the deferred security-header item; I will not create additional work because your approved scope explicitly reserved that hosting decision as a checklist rather than a new task.
+
+
+
+2 actions
+The task is complete: the corrected replacement artifact and all validations pass, with the one full regression run preserved. The deployment-header work remains intentionally deferred because this Autoscale/static route needs hosting-layer confirmation and your approved scope prohibited .replit edits.

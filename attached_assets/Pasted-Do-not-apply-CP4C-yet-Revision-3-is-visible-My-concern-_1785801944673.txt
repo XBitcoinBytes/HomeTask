@@ -1,0 +1,68 @@
+Do not apply CP4C yet.
+
+Revision 3 is visible. My concern is not that it was lost—it is that several requested corrections are still absent from Revision 3.
+
+Please address these exact discrepancies:
+
+1. Full wrapper validation is still missing.
+
+shadow-presenter.js trusts result.status === "verified" and validates selected presentation fields. It does not require the complete wrapper to pass the canonical isValidVerifiedWrapper() validation, including candidate/envelope validity.
+
+A malformed or incomplete wrapper claiming “verified” must never produce Verified or enable sharing. Reuse the canonical validator rather than creating a weaker duplicate.
+
+2. Filtering and capping are not strict validation.
+
+Revision 3 filters invalid sanitizedFieldCategories and diffCategoryCodes and slices them to maximum lengths. That silently converts malformed diagnostic data into a shareable Verified report.
+
+Instead:
+- Require both values to be arrays.
+- Reject the entire presentation if any entry is invalid.
+- Reject it if the array exceeds its maximum.
+- Do not silently filter, truncate, or repair it.
+
+Also require:
+- roomFilterResolved and dueNowDefaultFold to be actual booleans
+- warnings to be an actual array
+- generatedAt to be a valid ISO timestamp
+- appBuild and catalogVersion to have bounded valid formats
+- schema versions to equal the expected constants
+- unexpectedDiffCount === 0
+
+Any failure must yield Needs Review with sharing disabled.
+
+3. The proposed service worker does not require both assets.
+
+The code conditionally pushes the JS and CSS paths:
+
+if (jm) assetPaths.push(jm[0]);
+if (cm) assetPaths.push(cm[0]);
+
+Therefore installation can succeed when either or both assets are absent. Explicitly fail unless the required JavaScript and CSS references are found and unambiguous.
+
+Also:
+- await self.skipWaiting()
+- delete the incomplete v20-shadow cache if any fetch or cache write fails
+- leave the v19 cache untouched during failed installation
+- test missing JS, missing CSS, ambiguous references, partial cache-write failure, cleanup, and skipWaiting not called on failure
+
+Calling several cache.put() operations with Promise.all does not make the writes atomic. The proposal must either implement cleanup-on-failure or stop calling it atomic.
+
+4. Sharing is not fully exception-safe.
+
+Blob and File creation and navigator.canShare() occur outside a complete protective try/catch. Wrap serialization, Blob/File creation, canShare, share, and fallback initiation. AbortError should remain quiet; all other failures should either use the fallback or show the calm error message.
+
+5. Subscription notification can still throw.
+
+notifyShadowUpdate() directly invokes the listener. A UI-listener exception must not alter a valid diagnostic result or create an unhandled rejection. Contain and test listener failures. Also unsubscribe any previous subscription before assigning another one on dialog open.
+
+6. Boot logic remains duplicated.
+
+Create one startShadowDiagnostic() helper and call it from both document-ready branches. Preserve app.init() rejection semantics and keep shadow work fire-and-forget.
+
+7. Correct the file-status arithmetic.
+
+The 12-file list contains 4 added files and 8 modified files, not 3 added and 9 modified.
+
+8. The displayed Revision 3 response was truncated during the UI-test list. Reissue the complete corrected proposal and recalculate test totals after adding the missing tests.
+
+Do not modify files, run a build, deploy, or publish. Return the corrected proposal only.

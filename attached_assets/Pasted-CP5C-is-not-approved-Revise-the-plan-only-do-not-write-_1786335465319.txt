@@ -1,0 +1,99 @@
+CP5C is not approved. Revise the plan only; do not write code.
+
+Resolve these architectural blockers:
+
+1. Audit existing code before proposing new activation functions
+List the exact exports and signatures from:
+
+- activation-tx.js
+- migrate.js
+- reverseMigrate()
+- backup.js / backup-validate.js / import-tx.js
+- shadow-migrate.js
+- the canonical v2 envelope validator
+
+If CP5A already provides runActivationTransaction() or an equivalent full commit function, reuse it. Do not create a duplicate commitActivation().
+
+Show the exact persisted shadow-wrapper shape and exact canonical v2 envelope fields. Do not use invented names such as v2DataStr, tasks[], prefs{}, or recentSearches[] unless those are verified from source.
+
+2. Resolve the mutable-v2/marker-digest conflict
+
+The permanent marker currently records v2DataDigest and startup recovery verifies it against hometask-v2. Once Done, Skip, preferences, imports, or custom data change hometask-v2, that digest becomes stale.
+
+Design the permanent integrity model before any repository work:
+
+- What immutable fact does the authority marker prove?
+- Which marker fields remain immutable?
+- How are legitimate later v2 revisions distinguished from corruption?
+- What happens if a normal v2 write is interrupted?
+- How does startup verify current live v2 without comparing it to an obsolete activation digest?
+- Does each write require a revision journal, generation identifier, checksum, or transactional wrapper?
+
+Do not weaken validation merely to make tests pass.
+
+3. Provide a cycle-free dependency graph
+
+The draft says repo.js wraps storage/meta/recents while meta/recents/tasks are modified to call repo. That can create circular dependencies.
+
+Define exact layers, for example:
+
+- injected storage adapter
+- v1 repository
+- v2 repository
+- authority router
+- domain modules
+- UI
+
+No lower-level repository may import a domain module that imports the repository.
+
+4. Correct startup recovery ordering
+
+Define the exact order for:
+
+- legacy v1 import recovery
+- activation recovery
+- authority determination
+- v2 import recovery
+- repository construction
+- normal state hydration
+
+A v2 import rollback must not run until valid v2 authority is established. Explain how marker validation works when an interrupted v2 import has temporarily changed hometask-v2.
+
+5. Production rollback must preserve post-activation work
+
+Restoring the original pre-activation snapshot and knowingly losing later Done/Skip activity is not an acceptable normal rollback.
+
+Design:
+
+- a verified reverse migration of the current live v2 state back to v1;
+- equivalence checking before switching authority;
+- an atomic rollback transaction and marker-last authority switch;
+- retention of the original snapshot only as disaster-recovery evidence.
+
+If some v2 feature cannot reverse-migrate, fail closed and explain it. Snapshot restoration with data loss must be last-resort manual recovery, not the standard rollback.
+
+6. Reuse CP3 backup/import infrastructure
+
+Map the existing v2 backup, validation, staging, recovery, completionEvents, custom-zone, and custom-task fields into the runtime repository. Do not create a parallel incompatible backup design.
+
+Prove that export, import, Undo Import, malformed-data recovery, and interrupted-import recovery all operate on the authoritative schema.
+
+7. Extensibility
+
+Explain using the actual v2 recurrence union and actual userZones/userTasks fields how custom rooms, custom tasks, yearly recurrence, and seasonal recurrence can be added later. Identify whether any schema extension will still be required.
+
+8. Divide CP5C into smaller approval gates
+
+At minimum:
+
+- CP5C-A1: pure repository contracts and cycle-free v1 adapter, disconnected
+- CP5C-A2: mechanically route current v1 app through repository; zero behavior change
+- CP5C-B1: mutable-v2 integrity and repository implementation
+- CP5C-B2: v2 backup/import/undo/recovery integration
+- CP5C-C: controlled local activation and restart testing
+- CP5C-D: data-preserving rollback test
+- CP5C-E: separate production proposal
+
+Return corrected storage ownership, marker/revision model, dependency graph, startup sequence, rollback transaction, exact existing-function reuse, tests, and risks.
+
+Keep V2_ACTIVATION_ENABLED=false. Do not implement, build, publish, or begin CP6.

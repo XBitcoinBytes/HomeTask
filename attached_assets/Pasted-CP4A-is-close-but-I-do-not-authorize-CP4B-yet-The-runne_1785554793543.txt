@@ -1,0 +1,134 @@
+CP4A is close, but I do not authorize CP4B yet.
+
+The runner, isolation, failure behavior, and equivalence design are strong. Make the following narrowly scoped CP4A corrections.
+
+Do not begin CP4B, modify production runtime, build, change the service worker, or publish.
+
+Correction 1 — Replace FNV-1a With a Cryptographic Source Digest
+
+FNV-1a 32-bit is not sufficiently collision-resistant for migration integrity.
+
+It also currently treats null and an empty string identically and hashes JavaScript character units rather than a precisely defined byte encoding.
+
+Replace it with SHA-256 over an unambiguous canonical UTF-8 representation.
+
+Requirements:
+
+- Use SHA-256.
+- Do not import Node-only crypto code into a future browser-reachable module.
+- Keep hashing environment-neutral through an injected digest function or a carefully isolated Web Crypto-compatible abstraction.
+- The CP4A runner must remain free of direct production/browser dependencies.
+- Encode source keys in sorted order.
+- Use length-prefixed UTF-8 encoding or an equally unambiguous canonical encoding.
+- Distinguish:
+  - Missing/null value
+  - Empty string
+  - Literal strings containing colons, newlines, delimiters, or Unicode
+- Output a 64-character lowercase SHA-256 hexadecimal digest.
+- Compute it from the exact canonical representation of the raw strings returned by the adapter before parsing.
+
+Add tests proving:
+
+- Identical input produces identical digest.
+- Object insertion order does not matter.
+- null differs from "".
+- Unicode is encoded consistently.
+- Delimiter-like content cannot create an ambiguous representation.
+- Every single-character source mutation changes the digest in the fixtures.
+- Async digest implementations are awaited.
+- Digest rejection returns a structured failure.
+- No shadow is written when digest calculation fails.
+- Existing verified shadow remains intact after digest failure.
+
+Correct the documentation. Do not claim a hash makes reconstruction mathematically impossible. State accurately that SHA-256 is used as a one-way integrity digest and is not encryption.
+
+Privacy policy:
+
+- The full source digest may remain inside the local shadow wrapper for integrity.
+- Exclude it from the shareable CP4E privacy-safe report unless there is a demonstrated need to expose it.
+- The shareable report may use a non-sensitive run identifier unrelated to household content.
+
+Correction 2 — Measure Shadow Size in Bytes
+
+SHADOW_SIZE_LIMIT is currently described and enforced in characters. That is not a reliable storage-size measure for Unicode content.
+
+Enforce the limit against the serialized wrapper’s UTF-8 byte length.
+
+Requirements:
+
+- Define whether the 2 MB boundary means 2,097,152 UTF-8 bytes.
+- Calculate byte length deterministically.
+- Test:
+  - ASCII immediately below, at, and above the limit
+  - Multi-byte accented characters
+  - Emoji/surrogate pairs
+  - A string whose character count is below the limit but UTF-8 byte count exceeds it
+- Report both byte size and, if useful for diagnostics, character count.
+- The privacy-safe report may expose total byte size but no content.
+
+Correction 3 — Define Adapter Timeout Behavior
+
+The report demonstrates delayed and rejected Promises, but not a Promise that never settles.
+
+Add explicit, deterministic timeout handling for adapter and digest operations intended for future native storage compatibility.
+
+Requirements:
+
+- Use an injected timeout/scheduler abstraction or another deterministic testable design.
+- Do not introduce flaky real-time sleeps into the main suite.
+- Define the production-intended timeout value but keep it configurable.
+- A timed-out read, digest, write, or verification readback must:
+  - Return a structured failure
+  - Never claim verification
+  - Leave v1 unchanged
+  - Preserve an existing verified shadow
+  - Avoid an unhandled rejection if the original Promise later settles
+
+Test never-settling operations and late resolve/reject behavior.
+
+Correction 4 — Prove the Async Test Harness Fails Correctly
+
+The original CP4A harness could silently discard asynchronous failures. Add a durable negative self-test proving the repaired harness detects a delayed asynchronous failure and exits nonzero.
+
+This can use a separate intentionally failing fixture process or an independently tested harness abstraction. The intentionally failing case must not make the real suite fail; the real assertion is that the child/fixture exits unsuccessfully as expected.
+
+Also prove:
+
+- All scheduled checks are awaited.
+- A delayed rejection increments or reports failure.
+- Final totals are printed only after every check settles.
+- No unhandled rejection occurs after the summary.
+
+Correction 5 — Tighten Failed-Shadow Semantics
+
+Confirm and test that:
+
+- A failed shadow wrapper is never treated as a valid migration candidate.
+- CP4B, when later authorized, will check both shadowSchemaVersion and status === "verified" before doing anything with a shadow.
+- A failed run never overwrites an existing verified shadow.
+- A failed wrapper created when no verified wrapper exists contains structured diagnostic categories but is never read as active v2 data.
+- No current runtime code reads either verified or failed shadow wrappers.
+
+Required completion evidence:
+
+- Updated file list and diff summary
+- SHA-256 canonical-encoding specification
+- Representative local shadow wrapper
+- Representative shareable privacy-safe report without source digest
+- UTF-8 size-boundary results
+- Timeout matrix
+- Async-harness negative self-test result
+- Complete failure-injection matrix
+- Exact test totals by suite
+- Confirmation that all prior tests remain unchanged and passing
+- Confirmation that v1 remains active
+- Confirmation that src/v2 and the shadow runner remain disconnected
+- Confirmation that Build v19, SW v19, public/, dist/, and production remain unchanged
+- Confirmation that nothing was built or published
+- Remaining risks
+
+Stop and ask:
+
+“Do you approve corrected CP4A and authorize CP4B, or would you like further corrections?”
+
+Do not begin CP4B without explicit approval.

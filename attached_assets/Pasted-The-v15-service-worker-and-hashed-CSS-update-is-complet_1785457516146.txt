@@ -1,0 +1,256 @@
+The v15 service-worker and hashed-CSS update is complete and publicly verified.
+
+Current public build:
+
+- JavaScript: index-BDYtCELa.js
+- CSS: index-BoJCgNMO.css
+- Service worker: hometask-v15
+- Backup sheet is styled correctly on the first load
+- Backup, Close, Export, and Import controls are at least 44×44px
+- No console errors
+- No horizontal overflow at 390×844
+
+Do not redo or modify that completed update.
+
+Do not implement the proposed Custom Tasks plan yet.
+
+Custom tasks are approved as a future roadmap feature, but they belong in the later dedicated room/task/interval editing phase. Do not change the current catalog, add-task interface, custom-room model, or backup schema for custom tasks during this sprint.
+
+For now, complete only the remaining Backup & Restore data-safety hardening described below.
+
+IMPORTANT
+
+- Use only vanilla HTML, CSS, and JavaScript.
+- Do not add frameworks, TypeScript, dependencies, accounts, synchronization, or a backend.
+- Preserve the current 122-task, 23-room catalog.
+- Preserve all Done, Skip, scheduling, views, search, room filtering, progress, onboarding, persistence, accessibility, and visual behavior.
+- Do not change task IDs, titles, rooms, intervals, or safety classifications.
+- Do not redesign the Backup & Restore interface.
+- Do not alter the completed hashed-asset production configuration except to produce the next normal build hashes.
+- Do not report completion based only on localhost.
+
+1. PRESERVE ACTUAL MALFORMED DATA
+
+The current recovery description says malformed storage is quarantined using metadata only. Recording only the size and timestamp does not preserve the user’s damaged history.
+
+When a HomeTask-owned storage value cannot be parsed:
+
+- preserve a capped copy of the actual raw damaged string when storage permits
+- use a dedicated recovery key
+- never copy unrelated localStorage data
+- store:
+  - detectedAt
+  - sourceKey
+  - originalLength
+  - storedLength
+  - truncated
+  - rawData
+- cap rawData at a documented safe limit, such as 250 KB
+- retain only one clearly documented recovery record
+- do not silently overwrite an existing undownloaded recovery record
+- do not claim that the raw recovery record is a valid HomeTask backup
+
+If storage is too full or unavailable to preserve the raw data, clearly record and report that preservation failed.
+
+2. RECOVERY NOTICE
+
+When recoverable malformed data was detected, show a calm notice in Backup & Restore:
+
+“HomeTask found damaged saved data and reopened safely. Some history may need to be restored from a backup.”
+
+Provide:
+
+- Import Backup
+- Download Recovery Data
+- Dismiss
+
+Download Recovery Data must create a diagnostic JSON file containing the recovery metadata and capped rawData.
+
+Use a filename such as:
+
+HomeTask-recovery-YYYY-MM-DD.json
+
+The diagnostic file must clearly identify itself as recovery data, not as an importable normal backup.
+
+Do not show the notice repeatedly after dismissal unless a new corruption event occurs.
+
+3. ATOMIC IMPORT STORAGE
+
+A confirmed import must not leave HomeTask partially updated if a storage write fails.
+
+Before import:
+
+- validate the complete backup
+- sanitize all task state and preferences
+- build the complete destination state in memory
+- create a byte-for-byte pre-import snapshot of all HomeTask keys that will change
+- verify that the Undo snapshot was successfully saved
+- abort without changing current data if the Undo snapshot cannot be saved
+
+Use a dedicated temporary staging key:
+
+- write the proposed destination state to staging
+- read it back
+- parse and validate it
+- only then begin committing final HomeTask keys
+
+If any final write fails:
+
+- restore every changed key from the pre-import snapshot
+- verify the restored values
+- retain the Undo snapshot
+- remove incomplete staging data when safe
+- show a calm import-failed message
+- keep the app usable
+
+Remove the staging key only after a fully successful commit.
+
+4. INTERRUPTED-IMPORT RECOVERY
+
+At startup, detect an abandoned import staging key.
+
+Use explicit transaction metadata sufficient to determine whether:
+
+- no final writes occurred
+- some final writes occurred
+- the complete import committed successfully
+
+If completion cannot be proven:
+
+- restore the last known-good pre-import snapshot
+- verify the restored storage
+- remove abandoned staging data only after recovery succeeds
+- show a calm recovery notice
+- do not silently accept partially imported state
+
+A completed import must not be rolled back merely because cleanup of the staging key was interrupted. Use a clear committed marker or equivalent transaction state.
+
+5. UNDO IMPORT
+
+Preserve the existing Undo Last Import behavior.
+
+Verify that Undo:
+
+- restores every HomeTask key changed by the import
+- restores missing keys as missing rather than as the string “null”
+- restores task state and preferences byte-for-byte
+- removes or retires the Undo snapshot only after successful restoration
+- remains available if restoration fails
+- does not affect unrelated localStorage keys
+
+6. STORAGE-FAILURE HANDLING
+
+Explicitly handle:
+
+- localStorage read exceptions
+- localStorage write exceptions
+- quota-exceeded errors
+- failure to save the Undo snapshot
+- failure to save staging data
+- failure on the first final-key write
+- failure on a later final-key write
+- failure while rolling back
+- failure while removing staging data
+
+Never clear all localStorage.
+
+Never delete the last known-good HomeTask state before a verified replacement or rollback exists.
+
+7. KEEP CUSTOM TASKS DEFERRED
+
+Do not implement:
+
+- Add Task
+- custom rooms
+- custom task IDs
+- custom task editing
+- custom task deletion
+- custom-task backup fields
+- completion history
+- mark-all-room-tasks-done
+
+Save these for the later room/task/interval editing phase.
+
+The future Custom Tasks design should retain these backlog ideas:
+
+- separate custom-definition storage
+- IDs generated with crypto.randomUUID()
+- normalizeTaskTitle() on save
+- custom definitions separate from task-completion state
+- backup/import support with schema migration
+- duplicate detection
+- safe editing and deletion
+- custom-room lifecycle rules
+
+Do not implement them now.
+
+8. REQUIRED TEST REPORT
+
+Do not report only “all tests passed.”
+
+Provide an individual result for:
+
+- normal backup export
+- valid round-trip import
+- selecting a file without confirming leaves data unchanged
+- Cancel leaves data unchanged
+- successful Undo restores every changed key
+- malformed backup JSON
+- unsupported schema version
+- partially invalid task records
+- unknown and retired task IDs
+- malformed current task storage
+- malformed current preference storage
+- actual raw damaged-data preservation
+- capped/truncated raw recovery
+- recovery-data download
+- inability to preserve raw data because storage is full
+- successful staging validation
+- abandoned staging before final writes
+- abandoned staging during final writes
+- abandoned staging after successful commit
+- failure saving the Undo snapshot
+- failure saving staging data
+- first final-key write failure
+- later final-key write failure
+- successful rollback
+- rollback failure behavior
+- quota-exceeded behavior
+- unrelated localStorage keys remain untouched
+- offline export
+- offline import
+- all 122 tasks still load
+- all 23 rooms still load
+- Done, Skip, views, search, room filtering, and progress still work
+- no console errors
+- no horizontal overflow at 390×844
+
+Use controlled test storage or mocks for destructive failure tests. Do not damage real production user data.
+
+9. DEPLOYMENT
+
+After all tests pass:
+
+- increment the service-worker cache beyond v15
+- build normally so JavaScript and CSS remain content-hashed
+- deploy publicly
+- verify the actual public URL
+- confirm the first load has the correctly styled Backup interface
+- confirm no old unversioned style.css dependency has returned
+
+Report:
+
+1. Public URL.
+2. New JavaScript asset.
+3. New CSS asset.
+4. New service-worker version.
+5. Backup schema version.
+6. Recovery-key name.
+7. Staging-key name.
+8. Undo-snapshot key name.
+9. Maximum raw recovery size.
+10. Exact transaction and rollback sequence.
+11. Individual test results.
+12. Known limitations.
+
+Do not implement Custom Tasks or any other unrelated feature in this sprint.

@@ -1,0 +1,95 @@
+CP4C is not yet accepted for publication. Do not publish.
+
+The catalog resolution and 453/453 automated results are accepted. Perform one final browser-only verification pass. Do not change application behavior, catalog data, schemas, or unrelated features.
+
+Serve the clean production build from dist/public—not the Vite development server—and exercise the following in an actual browser at 390×844.
+
+1. Returning-user runtime test
+
+Create realistic v1 localStorage for a completed-onboarding user. Record the exact raw strings for:
+- hometask-v1
+- hometask-meta-v1
+- every other v1-owned HomeTask key
+
+Load the built application and verify:
+- Home renders normally
+- Today, This Week, All Tasks, and Rooms work
+- search works
+- room filtering works
+- Done works
+- Skip Today works
+- Skip Week works
+- Backup & Restore opens
+- backup export completes
+- no console errors
+- no unhandled rejections
+
+After the shadow diagnostic completes, compare every recorded v1 string byte-for-byte. All must be identical except changes intentionally caused by the Done/Skip actions. For the shadow-preservation test itself, use a separate run with no user actions so every v1 value must remain exactly identical.
+
+2. Actual Upgrade Check browser test
+
+Do not cite unit tests for this section. Exercise the rendered UI.
+
+Verify:
+- the Upgrade Check section appears in Backup & Restore
+- it reaches Verified for valid v1 data
+- the Share Report button appears only after verification
+- the displayed state updates without closing and reopening the dialog
+- closing and reopening does not create duplicate updates
+- hometask-v2-shadow exists and contains a canonically valid verified wrapper
+- a second reload preserves the verified wrapper according to the intended idempotent behavior
+
+If “Running” completes too quickly to observe naturally, report that honestly. Do not weaken or artificially slow production behavior merely to capture it.
+
+3. Actual shared-report test
+
+Invoke the rendered Share Report control with browser API mocks where required.
+
+Capture the resulting JSON and provide:
+- its complete field-name list
+- confirmation that it parses successfully
+- confirmation that it contains none of the prohibited household data
+- successful native-share simulation
+- successful download fallback
+- quiet AbortError behavior
+- calm handling of a non-cancellation failure
+
+These must be behavioral browser tests, not source-pattern assertions alone.
+
+4. Actual offline test of the built application
+
+Using the production build and its real service worker:
+- load online
+- wait until the new worker controls the page
+- confirm the v20-shadow cache contains the intended shell files
+- switch the browser context offline
+- reload
+- confirm the core v1 application renders and remains usable
+- confirm no blank screen occurs
+- confirm a missing/nonessential shadow dynamic chunk cannot prevent the core app from loading
+
+Report whether the two dynamic chunks are cached and when they enter the cache.
+
+5. Correct the shadow-config.js comment only
+
+The current comment saying the build “must not be published” contradicts the planned CP4C controlled rollout.
+
+Replace it with language stating:
+
+“Current value true is intentional for the temporary v20-shadow diagnostic rollout. Publication requires separate explicit owner approval. During this rollout v1 remains authoritative and the shadow result is diagnostic only. Reset the flag to false after the approved device-audit window and before proceeding beyond CP4C/CP4D.”
+
+This is documentation-only. Do not change the flag.
+
+6. Evidence and stopping point
+
+Provide:
+- each browser scenario as PASS or FAIL
+- screenshots of the returning-user Home screen, Verified status, and offline-loaded screen
+- console-error and unhandled-rejection counts
+- exact before/after v1 byte-comparison results
+- resulting shadow status
+- shared-report field list
+- Cache Storage contents
+- confirmation that production remains unpublished
+
+Stop after the report. Do not publish, deploy, activate v2, fix the unrelated API healthcheck, or create a native-app task.

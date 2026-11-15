@@ -1,0 +1,49 @@
+CP3 is very strong but requires three narrowly scoped corrections before acceptance. Do not begin CP4 yet.
+
+Do not connect v2 to production runtime, change the service worker, build production assets, publish, or create project tasks.
+
+Correction 1 — Enforce the Permanent Title Case Policy
+
+The report says imported titles receive “trim + cap only, no Title Case rewriting.” That conflicts with HomeTask’s approved permanent policy that all task and room/zone names—seeded, imported, or user-created—must use the canonical Title Case normalizer.
+
+For user-owned display-name fields, import validation must call the same specified normalization policy used for future task creation:
+
+- User-zone titles
+- User-task titles
+- User title overrides for seed tasks or zones
+- Any other user-facing task/zone name carried by the backup
+
+Requirements:
+
+- Trim and collapse whitespace.
+- Capitalize every word according to the approved policy.
+- Preserve recognized acronyms such as HEPA, UV, AC, CO, and CO2.
+- Apply the established hyphen and apostrophe rules.
+- Never alter IDs, dates, tags, recurrence semantics, state, or history.
+- Record every title normalization as an explicit repair.
+- Do not Title-Case arbitrary tags unless tags have a separately approved policy.
+- Historical tombstone definitions remain evidence-preserving source data; if restored as a user task, the new user-task title must be normalized.
+
+Add tests for lowercase, mixed case, excessive whitespace, hyphenated names, apostrophes, acronyms, empty titles, and malicious HTML-like text.
+
+If the production normalizer cannot yet be imported without connecting v2 to runtime, create a pure v2 implementation with contract tests proving it matches the existing policy. Plan eventual deduplication separately; do not rewire runtime during CP3.
+
+Correction 2 — Preserve Referential Integrity
+
+Do not repair an invalid user-task zoneId to null and commit that task as live data.
+
+Use these rules:
+
+- A user task’s zoneId must resolve to either a valid live seed zone or a valid imported user zone.
+- If it does not resolve, quarantine the user task and its associated state together, or reject the import according to the durable-quarantine policy below.
+- A seed-task zone override pointing to a nonexistent zone must be stripped and reported so the task safely falls back to its catalog zone.
+- An override addressing an unknown seed task or seed zone must not enter active storage.
+- No successfully committed active user task may have a null, missing, archived-without-policy, or nonexistent zone reference.
+- Duplicate normalized zone titles must be handled deterministically and reported.
+- Archival relationships must remain internally consistent.
+
+Add invariant tests after every successful import proving:
+
+- Every active task resolves to exactly one valid zone.
+- Every state record resolves to a valid active, archived, or retired task according to policy.
+- No

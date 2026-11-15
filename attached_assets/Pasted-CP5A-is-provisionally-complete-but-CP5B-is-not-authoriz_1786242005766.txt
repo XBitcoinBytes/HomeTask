@@ -1,0 +1,70 @@
+CP5A is provisionally complete, but CP5B is not authorized. Perform a narrow evidence/correction pass only.
+
+Do not refactor for style, change UI, wire production startup, enable the flag, build, or publish.
+
+1. Prove the pre-marker non-rewrite invariant
+
+Inspect every recoverActivationStartup() path before a valid authority marker exists.
+
+Required invariant:
+
+- No pre-marker path may call setItem or removeItem on any v1 source key.
+- A v1/snapshot mismatch must return source_changed or ambiguous_state.
+- It must never restore the older snapshot over current v1 bytes.
+- This applies whether the mismatch appears accidental, malformed, concurrent, or unexplained.
+
+If the current code permits a pre-marker v1 restoration, fix it minimally.
+
+Add a spy-adapter test that exercises every pre-marker recovery state and asserts zero writes/removals to every v1 source key.
+
+2. Restore precise precondition tests
+
+Do not accept only r.ok === false for targeted validation tests.
+
+Each of the five precondition tests must assert:
+
+- the exact expected error code
+- the intended validation stage was reached
+- later stages were not reached
+- storage remained byte-identical
+
+If a malformed candidate is necessarily rejected earlier by isValidVerifiedWrapper(), rename that test to match the actual failure and add a valid-wrapper fixture that reaches the intended later validation condition where technically possible.
+
+3. Prove mutation timing
+
+For every concurrent-mutation test, record an operation trace and assert the mutation occurred at its named boundary:
+
+- after snapshot verification
+- after staging verification
+- after final v2 write
+- immediately before marker write
+- during startup recovery
+
+Do not rely solely on write-count thresholds without verifying the corresponding key/state transition.
+
+4. Disabled-path browser smoke
+
+At 390×844, load the existing app with realistic v1 storage and confirm:
+
+- v1 raw bytes unchanged
+- no activation snapshot, staging, marker, quarantine, or hometask-v2 key created by CP5A
+- Done, Skip, search, rooms, and Backup still work
+- zero console errors
+- zero unhandled rejections
+
+5. Final evidence
+
+Return no more than 400 words containing:
+
+- exact activation key names
+- exact state sequence
+- exact recovery decision table
+- files changed during this correction, if any
+- v2-activation and full-suite totals
+- disabled-path browser result
+- V2_ACTIVATION_ENABLED remains false
+- CP5A remains disconnected
+- APP_BUILD and service worker unchanged
+- nothing built or published
+
+Stop afterward. Do not begin CP5B.

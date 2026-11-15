@@ -1,0 +1,50 @@
+A2.2a is accepted at 841/841 tests.
+
+Pause before A2.2b. Prepare a stable production test artifact for the accepted A2.1 runtime repository wiring, including the disconnected A2.2a files. Do not publish.
+
+Release identity:
+
+- APP_BUILD: v21-repository-test
+- service-worker cache: hometask-v21-repository-test
+- update any visible build label to v21-repository-test
+
+Requirements:
+
+1. Keep V2_ACTIVATION_ENABLED=false.
+2. Keep the CP4 shadow diagnostic behavior unchanged.
+3. Do not wire V1BackupService; A2.2a remains disconnected.
+4. Make only release-identity/service-worker changes required for a coherent build.
+5. Run all 841 automated checks before building.
+6. Run a clean production build.
+7. Verify built HTML references only the newly generated assets.
+8. Verify the generated main bundle contains the A2.1 V1Repository runtime wiring.
+9. Verify the disconnected A2.2a service is not statically reachable from the production entry and does not enter the main bundle unexpectedly.
+10. Verify the production service worker:
+   - uses hometask-v21-repository-test;
+   - precaches the newly generated HTML/JS/CSS successfully;
+   - activates only after successful cache population;
+   - preserves the established safe cache-update behavior.
+11. Run a 390×844 production-build smoke:
+   - returning-user startup;
+   - Done;
+   - Skip Today;
+   - Skip Week;
+   - views;
+   - room picker;
+   - search and recent searches;
+   - Backup & Restore open/close;
+   - reload persistence;
+   - zero console errors/unhandled rejections;
+   - zero horizontal overflow.
+12. Confirm no hometask-v2 or activation key is created.
+13. Report:
+   - exact files changed;
+   - exact per-suite totals;
+   - main JS/CSS filenames;
+   - all dynamic chunks;
+   - build result;
+   - service-worker cache identity;
+   - production-smoke results;
+   - confirmation that nothing was published.
+
+Do not publish, begin A2.2b, activate v2, or add features. Stop for explicit owner approval.

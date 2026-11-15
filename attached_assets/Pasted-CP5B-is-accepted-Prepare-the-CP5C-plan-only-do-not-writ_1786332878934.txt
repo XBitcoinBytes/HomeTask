@@ -1,0 +1,51 @@
+CP5B is accepted. Prepare the CP5C plan only; do not write code.
+
+CP5C objective:
+Design the controlled transition from v1 authority to v2 authority, including activation and the complete v2 application data path.
+
+Inventory every current production path that reads, writes, imports, exports, restores, or deletes:
+
+- task state
+- preferences/meta
+- recent searches
+- onboarding state
+- Done and Skip
+- baseline scheduling
+- backup export/import
+- Undo Import
+- malformed-storage recovery
+- interrupted-import recovery
+- CP4 shadow diagnostics
+
+Required invariants:
+
+1. No authority marker → v1 only.
+2. Valid verified marker → v2 only.
+3. After v2 commitment, normal app operations never write v1.
+4. No dual-write period.
+5. Retained v1 and the original snapshot remain immutable fallback evidence.
+6. Backup/export/import/undo must use the authoritative schema.
+7. Every application module must use one authority-aware repository interface; no scattered direct localStorage access for authoritative data.
+8. Unknown, malformed, contradictory, timeout, or ambiguous authority must fail closed before writable UI starts.
+9. Activation must remain behind V2_ACTIVATION_ENABLED=false until a separately approved test checkpoint.
+10. CP4 shadow behavior must be retired or made read-only at the correct point; define that point precisely.
+11. Custom rooms/tasks and seasonal scheduling are not part of CP5C, but the v2 repository must support adding them later without another schema rewrite.
+
+Split CP5C into the smallest safe sub-checkpoints, preferably:
+- repository/composition layer while v1 remains active
+- v2 read/write and backup integration behind false flag
+- controlled local activation test
+- production activation proposal
+
+Provide:
+
+- exact module/data-flow diagram
+- authority decision table
+- complete storage-key ownership table
+- proposed files and interfaces
+- activation, rollback, and recovery sequences
+- tests and failure injection
+- risks and estimated effort
+- explicit publication gates
+
+Do not implement, build, publish, change the flag, or begin CP6. Stop for approval.

@@ -1,0 +1,254 @@
+Do not apply, build, checkpoint, enable, or publish the proposed CP4C diff yet.
+
+Revise the read-only proposal to address the following issues.
+
+1. Correct the Complete File List
+
+The proposal says eight files change, but it also proposes:
+
+- tests/v2-shadow-ui.test.mjs
+- tests/run-all.mjs
+
+Include every proposed file in the authoritative list.
+
+For each file provide:
+
+- Added or modified
+- Exact purpose
+- Risk level
+- Complete proposed diff
+
+2. Correct the Test Totals
+
+The current accepted baseline is 405 checks:
+
+- backup: 22
+- workload: 21
+- v2: 54
+- import-order: 14
+- v2-backup: 100
+- v2-tx: 37
+- v2-tripwire: 9
+- v2-shadow: 114
+- v2-shadow-bridge: 34
+
+If CP4C adds 19 UI checks and one import-order check, the expected total is 425 unless additional checks are explicitly identified.
+
+Do not replace the actual suite names with invented v2-schema, v2-migrate, or v2-equivalence suite names.
+
+Provide the exact proposed post-CP4C suite table and arithmetic.
+
+3. Use a Strict Privacy Allowlist
+
+Do not copy this object wholesale:
+
+repairsFromMigration: vs.repairsFromMigration
+
+A future migration change could add raw values, IDs, or text to that object and silently leak it into the shared report.
+
+Construct the shared report field-by-field using only known scalar values:
+
+- droppedUnknownIdsCount
+- malformedCount
+- normalizedDoneTodayCount
+- sanitizedFieldsCount
+- roomFilterResolved
+- dueNowDefaultFold
+
+For sanitizedFieldCategories:
+
+- Require an array
+- Keep only strings matching a strict approved category-code pattern
+- Cap the number and length
+- Never include arbitrary values
+
+For diffCategoryCodes:
+
+- Require an array
+- Keep only strings matching /^[A-Z][A-Z0-9_:]{0,63}$/
+- Cap the array length
+- Deduplicate it
+
+Coerce counts only when they are finite, non-negative safe integers. Reject or mark Needs Review if the verified result does not satisfy the expected presentation schema.
+
+Change the notice from:
+
+“This report contains no personal or task data.”
+
+to the more accurate:
+
+“This report contains migration counts and technical status only. It does not include task names, room names, task history, searches, or stored values.”
+
+4. Do Not Let UI Interpret Raw Shadow Wrappers
+
+backup-ui.js should not decide that a result is verified merely from:
+
+result.status === 'verified' && result.wrapper
+
+The bridge or a dedicated pure presentation adapter must produce a validated UI model such as:
+
+{
+  phase: "running" | "verified" | "needs-review",
+  safeReport: null | <strict allowlisted report>,
+  shareAllowed: boolean
+}
+
+Only the shadow layer should inspect the raw wrapper and candidate.
+
+The normal app UI must never receive or retain the full candidate object when it only needs status and safe counts.
+
+Add tests proving malformed “verified” wrappers produce Needs Review and cannot be shared.
+
+5. Enforce the Feature Flag in the Share Handler
+
+The proposed _onShadowShare() does not check SHADOW_MIGRATION_ENABLED, even though the proposed disabled-mode test expects it to be a no-op.
+
+Require:
+
+if (!SHADOW_MIGRATION_ENABLED) return;
+
+Also require a valid shareAllowed presentation model.
+
+Test direct invocation with the flag false and a forged verified result. No share, Blob, URL, File, or fallback operation may occur.
+
+6. Fix the Shadow Status Update Model
+
+If the Backup & Restore sheet is open while the shadow check completes, it should update from Running to Verified or Needs Review without requiring the user to close and reopen it.
+
+Use a tiny subscription/notification mechanism or an explicit refresh callback.
+
+Requirements:
+
+- No polling loop
+- No timer loop
+- No memory-leaking subscriptions
+- Unsubscribe or lifecycle-safe behavior
+- VoiceOver receives a polite status update
+- No repeated announcements
+
+Use role="status" or aria-live="polite" for the status text.
+
+7. Correct Hidden-UI Claims and CSS
+
+The diagnostic markup is always present in index.html, so do not call it “completely absent” when the flag is false. It is hidden and inaccessible.
+
+Add an explicit rule:
+
+.bk-shadow-check[hidden] {
+  display: none;
+}
+
+Test:
+
+- Not visible
+- Not focusable
+- Not in the accessibility tree while hidden
+- Share button cannot be tabbed to while its parent is hidden
+
+8. Repair the Proposed backup-ui.js Diff Structure
+
+The shown diff appears to insert the shadow block immediately after:
+
+function _onDismissRecovery() {
+
+without showing that function’s existing body and closing brace.
+
+Re-read the exact source and provide a structurally valid diff with the shadow functions placed outside every existing function.
+
+Do not use ellipses inside an “exact unified diff.”
+
+9. Eliminate the Known Offline Hazard Before Publication
+
+The proposal explicitly acknowledges this failure window:
+
+- v20-shadow SW installs
+- v19 cache is deleted
+- v20 HTML is cached
+- New hashed JS/CSS have not been cached
+- User goes offline
+- HomeTask cannot launch
+
+That is not acceptable for an offline-first application.
+
+Revise the service-worker proposal so installation atomically caches:
+
+- index.html
+- manifest.json
+- The exact content-hashed JavaScript referenced by the new index.html
+- The exact content-hashed CSS referenced by the new index.html
+- Any other essential startup asset
+
+The old cache must not be deleted until the new shell and its referenced critical assets have all been cached successfully.
+
+Possible approach:
+
+- Fetch the new index.html during install
+- Parse or extract its same-origin critical asset URLs safely
+- Cache the HTML and all critical hashed assets inside install event.waitUntil()
+- Call skipWaiting only after successful caching
+- If any critical asset fails, installation fails and v19 remains active
+
+Provide the exact proposed service-worker implementation and tests.
+
+Test:
+
+- Successful atomic upgrade
+- JS fetch failure
+- CSS fetch failure
+- Manifest failure
+- Partial cache failure
+- Existing v19 remains usable after failed install
+- Offline launch immediately after successful activation
+- Old-cache deletion only after complete new-shell caching
+- iPhone/standalone lifecycle remains accurately described
+
+Do not say the hazard is acceptable merely because it existed before.
+
+10. Remove Unsupported iOS Claims
+
+Do not claim that pre-iOS-16.4 Add-to-Home-Screen apps categorically lacked persistent service-worker support unless supported by authoritative evidence.
+
+Keep physical-device instructions behavioral:
+
+- Check the visible build label
+- Reload if still on v19
+- Verify online launch
+- Verify offline relaunch
+
+Avoid speculative version-history statements.
+
+11. Make Build Verification Robust
+
+Do not rely on minified function names such as maybeShadowMigrate remaining in a production bundle.
+
+Replace unreliable grep checks with:
+
+- Verified asset hashes
+- Known stable string constants such as hometask-v2-shadow
+- Built HTML inspection
+- Service-worker cache-name inspection
+- Browser runtime behavior
+- Test-enforced import graph
+- Privacy-safe status UI
+
+Do not grep the full catalog bundle for common room names and interpret matches as privacy failures.
+
+12. Improve Share/Download Safety
+
+Require both navigator.share and navigator.canShare before using file sharing.
+
+Do not revoke the Blob URL synchronously immediately after click. Revoke it after a safe deferred cleanup.
+
+Restore or communicate status if both sharing and fallback fail.
+
+The export-error bug already recorded remains a separate future fix; do not mix it into CP4C.
+
+13. Preserve Approval Boundaries
+
+This remains a read-only corrected proposal.
+
+End with:
+
+“Do you approve applying the corrected CP4C diff in the development workspace and running tests/build verification—but not publishing?”
+
+Do not apply, build, checkpoint, or publish anything yet.

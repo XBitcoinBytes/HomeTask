@@ -1,0 +1,3413 @@
+/* ================================================================
+   HomeTask — style.css  ·  v3 · Graphite Instrument
+
+   Material language:
+   · Near-black graphite, no purple or blue bias
+   · Dark brushed titanium plates — fine directional grain, soft float
+   · Specular catch from above-left — edge highlights, not colored fills
+   · Status through luminous 1px top-edge + tinted metallic border
+   · Editorial typography — calm, generous, optimized for older users
+   · Motion: ease-out and linear only — zero spring, zero bounce
+
+   Layer order:
+     0  @property  (interpolatable scroll-linked tokens)
+     1  Design tokens
+     2  Reset
+     3  App shell
+     4  Header  (clean frosted graphite, overhead-light feel)
+     5  Header progress bar
+     6  Controls bar
+     7  Search
+     8  Due-now toggle
+     9  Room filter chips
+    10  Task list & room groups
+    11  Task cards  (grain · edge · surface · state)
+    12  Status badges
+    13  Action row
+    14  Buttons  (Done · Skip)
+    15  Empty states
+    16  Keyframes
+    17  Scroll-reactive specular  (@supports)
+    18  Reduced-motion
+    19  Accessibility
+    20  Desktop
+   ================================================================ */
+
+
+/* ── 0. Interpolatable custom properties ───────────────────────── */
+/*
+ * Declared with @property so they can be animated by scroll-timeline.
+ * --grain-angle shifts the brushed-titanium grain direction as the
+ * user scrolls — simulating a fixed light source on a moving surface.
+ */
+@property --grain-angle {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 143deg;
+}
+
+@property --spec-shift {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 42%;
+}
+
+
+/* ── 1. Design tokens ──────────────────────────────────────────── */
+:root {
+  /* ── OLED backdrop ──────────────────────────────────────────── */
+  --bg:   #050507;   /* true near-black, 1-unit cool cast — prints as void on OLED */
+  --bg-b: #080809;   /* micro-lift for inset areas */
+
+  /* ── Graphite plates ────────────────────────────────────────── */
+  /* Warm-neutral, minimal color bias. Each step ≈ 6–8 luma units. */
+  --g0: #0d0d10;   /* card base — deep graphite */
+  --g1: #131316;   /* card field — slightly raised */
+  --g2: #1a1a1e;   /* interactive well (search, toggles) */
+  --g3: #212126;   /* hover surface */
+  --g4: #29292f;   /* active surface */
+
+  /* ── Specular hairlines ─────────────────────────────────────── */
+  --s-lo:    rgba(255,255,255,0.042);   /* ambient */
+  --s-mid:   rgba(255,255,255,0.085);   /* surface highlight */
+  --s-hi:    rgba(255,255,255,0.155);   /* top-edge catch */
+  --s-peak:  rgba(255,255,255,0.230);   /* specular peak */
+  --sep:     rgba(200,195,190,0.070);   /* warm hairline separator */
+
+  /* ── Typography ─────────────────────────────────────────────── */
+  /* Warm white — less harsh than pure #fff on OLED */
+  --text:    #f0ede8;   /* primary   */
+  --text-2:  #959290;   /* secondary */
+  --text-3:  #88847e;   /* tertiary, 4.67:1 minimum on --g2 */
+  --text-4:  #2c2a28;   /* disabled  */
+
+  /* ── Status palette (iOS semantic, OLED-vivid) ──────────────── */
+  --c-red:    #ff453a;
+  --c-orange: #ff9f0a;
+  --c-yellow: #ffd60a;
+  --c-green:  #32d74b;
+
+  /* ── Status metallic border tints ──────────────────────────── */
+  --st-red-hi:    rgba(255,69,58,0.58);
+  --st-red-lo:    rgba(255,69,58,0.09);
+  --st-orange-hi: rgba(255,159,10,0.58);
+  --st-orange-lo: rgba(255,159,10,0.09);
+  --st-yellow-hi: rgba(255,214,10,0.54);
+  --st-yellow-lo: rgba(255,214,10,0.09);
+  --st-green-hi:  rgba(50,215,75,0.46);
+  --st-green-lo:  rgba(50,215,75,0.08);
+
+  /* ── Wordmark — warm platinum, a controlled metallic identity ── */
+  --grad-wordmark: linear-gradient(
+    132deg,
+    #6e6a62 0%,
+    #b0aa9e 18%,
+    #e4ddd0 38%,
+    #bab29e 56%,
+    #d8d0c0 74%,
+    #a09890 90%,
+    #ccc4b4 100%
+  );
+
+  /* ── Room label — cool chrome-steel ────────────────────────── */
+  --grad-chrome: linear-gradient(
+    132deg,
+    #484850 0%,
+    #8888a0 26%,
+    #d4d4e4 50%,
+    #8080a0 74%,
+    #b8b8cc 100%
+  );
+
+  /* ── Card default border gradient ──────────────────────────── */
+  /*
+   * Simulates light from above-left: bright top-left corner,
+   * dim lower-right, with a faint catch at bottom-right.
+   */
+  --card-border-default: linear-gradient(
+    148deg,
+    var(--s-hi)   0%,
+    var(--s-mid)  28%,
+    var(--s-lo)   58%,
+    var(--s-mid)  100%
+  );
+
+  /* ── Progress ─────────────────────────────────────────────── */
+  --progress-pct: 0%;
+
+  /* ── Font stack ───────────────────────────────────────────── */
+  --font: -apple-system, "SF Pro Text", "SF Pro Display",
+          BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif;
+
+  /* ── Geometry ─────────────────────────────────────────────── */
+  --header-h:    72px;
+  --radius-card: 16px;
+  --radius-btn:  10px;
+  --radius-pill: 100px;
+  --touch:       44px;
+  --page-pad:    18px;
+  --content-max: 640px;
+
+  /* ── Motion ───────────────────────────────────────────────── */
+  /* No spring, no bounce. All cubic-bezier values < 1 in all y-coords. */
+  --ease-out:  cubic-bezier(0.22, 1.00, 0.36, 1);   /* decelerate to rest */
+  --ease-snap: cubic-bezier(0.40, 0.00, 0.20, 1);   /* quick interactive */
+  --ease-io:   cubic-bezier(0.45, 0.00, 0.55, 1);   /* symmetric in-out */
+  --dur-fast:  115ms;
+  --dur-base:  250ms;
+  --dur-slow:  380ms;
+}
+
+
+/* ── 2. Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+  height: -webkit-fill-available;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding-bottom: max(env(safe-area-inset-bottom), 24px);
+  overscroll-behavior-y: none;
+}
+
+ul, ol  { list-style: none; }
+img, svg { display: block; }
+button  { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input   { font: inherit; color: inherit; }
+
+
+/* ── 3. App shell ──────────────────────────────────────────────── */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+
+/* ── 4. Header ─────────────────────────────────────────────────── */
+/*
+ * Clean frosted graphite — no colored shimmer or iridescent overlays.
+ * Light model: subtle warm gradient from top (overhead ambient) fading out.
+ * Blur is kept at 14px — tasteful, not thick or web-app-ish.
+ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  overflow: hidden;
+
+  /* OLED dark base + very faint warm overhead tint */
+  background:
+    linear-gradient(180deg, rgba(220,210,195,0.032) 0%, transparent 70%),
+    rgba(5,5,7,0.90);
+
+  backdrop-filter: blur(14px) saturate(1.45);
+  -webkit-backdrop-filter: blur(14px) saturate(1.45);
+
+  /* Fine hairline separator with a subtle warm copper undertone */
+  border-bottom: 1px solid rgba(195,182,162,0.10);
+
+  /* Safe-area for notch / Dynamic Island */
+  padding-top: env(safe-area-inset-top);
+}
+
+/*
+ * Specular top-edge: a 1px bright line across the very top of the header.
+ * Simulates overhead light catching the edge of a machined graphite plate.
+ * Barely visible but adds perceptible material weight.
+ */
+.app-header::before {
+  content: '';
+  position: absolute;
+  top: calc(env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--s-mid) 20%,
+    var(--s-hi)  50%,
+    var(--s-mid) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  height: var(--header-h);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 var(--page-pad);
+  position: relative;
+  z-index: 1;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Warm platinum wordmark — premium, restrained metallic, not gold */
+.app-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.7px;
+  line-height: 1.06;
+  background: var(--grad-wordmark);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Attention count — clearly legible secondary */
+.app-subtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
+  -webkit-text-fill-color: var(--text-3);
+  letter-spacing: 0.005em;
+  min-height: 16px;
+  transition: color var(--dur-fast) var(--ease-snap);
+}
+
+/* Daily progress — iOS green, fades in when > 0 */
+.app-progress {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-green);
+  -webkit-text-fill-color: var(--c-green);
+  min-height: 15px;
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.app-progress:not(:empty) {
+  opacity: 0.85;
+  transform: translateY(0);
+}
+
+
+/* ── 5. Header progress bar ────────────────────────────────────── */
+/*
+ * A 2px mercury-fill strip anchored to the header bottom edge.
+ * Driven by --progress-pct set by JS. Transitions are linear — no spring.
+ */
+.header-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255,255,255,0.03);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.header-progress-fill {
+  height: 100%;
+  width: var(--progress-pct);
+  background: linear-gradient(
+    90deg,
+    #0a2e16 0%,
+    #166830 45%,
+    #32d74b 80%,
+    #22c03a 100%
+  );
+  border-radius: 0 2px 2px 0;
+  /* Linear ease — smooth fill, no spring */
+  transition: width var(--dur-slow) linear;
+}
+
+
+/* ── 6. Controls bar ───────────────────────────────────────────── */
+.controls {
+  position: sticky;
+  top: calc(var(--header-h) + env(safe-area-inset-top));
+  z-index: 190;
+  background: rgba(5,5,7,0.94);
+  backdrop-filter: blur(12px) saturate(1.35);
+  -webkit-backdrop-filter: blur(12px) saturate(1.35);
+  border-bottom: 1px solid var(--sep);
+  padding: 10px var(--page-pad) 0;
+}
+
+
+/* ── 7. Search ─────────────────────────────────────────────────── */
+.search-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--g2);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--s-mid);
+  overflow: hidden;
+  margin-bottom: 8px;
+  transition:
+    border-color var(--dur-fast) var(--ease-snap),
+    background    var(--dur-fast) var(--ease-snap);
+}
+
+.search-wrap:focus-within {
+  border-color: rgba(255,255,255,0.20);
+  background: var(--g3);
+}
+
+.search-icon {
+  flex-shrink: 0;
+  margin-left: 14px;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+/* 44px touch target — iOS standard */
+.search-input {
+  flex: 1;
+  height: var(--touch);
+  padding: 0 10px;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: var(--text);
+  caret-color: var(--c-green);
+}
+
+.search-input::placeholder       { color: var(--text-3); }
+.search-input::-webkit-search-cancel-button { display: none; }
+
+/* Clear button — full 44×44 touch target */
+.search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0 10px;
+  color: var(--text-3);
+  flex-shrink: 0;
+  transition: color var(--dur-fast) var(--ease-snap);
+}
+.search-clear:hover { color: var(--text-2); }
+
+
+/* ── 8. Due-now toggle ─────────────────────────────────────────── */
+.controls-toggle-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/*
+ * Visual height: 34px.
+ * Invisible touch zone via ::before extends to ≥44px.
+ * Inactive: dark graphite well with muted text.
+ * Active: warm amber tint — matches "soon" status tier.
+ */
+.toggle-due-now {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+
+  background: var(--g2);
+  color: var(--text-3);
+  border: 1px solid var(--s-lo);
+  transition:
+    background    var(--dur-fast) var(--ease-snap),
+    color         var(--dur-fast) var(--ease-snap),
+    border-color  var(--dur-fast) var(--ease-snap);
+}
+
+/* Extended touch zone — invisible */
+.toggle-due-now::before {
+  content: '';
+  position: absolute;
+  inset: -5px -4px;
+}
+
+.toggle-due-now:active { opacity: 0.65; }
+
+/* Active state — warm amber, matching "soon" urgency tier */
+.toggle-due-now.active,
+.toggle-due-now[aria-pressed="true"] {
+  background: rgba(255,214,10,0.09);
+  color: var(--c-yellow);
+  border-color: rgba(255,214,10,0.26);
+}
+
+.toggle-icon { flex-shrink: 0; }
+
+
+/* ── 9. View tabs (Today / This Week / All Tasks) ─────────────── */
+/*
+ * Full-width segmented control replacing the old due-now toggle.
+ * Uses role="radiogroup" + role="radio" + roving tabIndex pattern.
+ * Active tab: green tint matching the "done" status tier.
+ * Touch targets: container is 44px tall (--touch), tabs fill it.
+ */
+.controls-view-row {
+  padding-bottom: 8px;
+}
+
+.view-tabs {
+  display: flex;
+  background: var(--g2);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--s-lo);
+  padding: 3px;
+  gap: 2px;
+}
+
+.view-tab {
+  flex: 1;
+  min-height: calc(var(--touch) - 6px); /* container padding = 3px top+bottom */
+  padding: 0 8px;
+  border-radius: calc(var(--radius-pill) - 3px);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--text-3);
+  background: transparent;
+  border: none;
+  transition:
+    background  var(--dur-fast) var(--ease-snap),
+    color       var(--dur-fast) var(--ease-snap);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.view-tab:active { opacity: 0.65; }
+
+.view-tab[aria-checked="true"] {
+  background: rgba(74,222,128,0.12);
+  color: var(--c-green);
+}
+
+.view-tab:focus-visible {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: -2px;
+  border-radius: calc(var(--radius-pill) - 3px);
+}
+
+/* ── Old filter chips ──────────────────────────────────────────── */
+.filter-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-chips::-webkit-scrollbar { display: none; }
+
+/*
+ * Visual height: 30px. Touch zone extended to ≥44px via ::before.
+ */
+.chip {
+  position: relative;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 13px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--g2);
+  color: var(--text-3);
+  border: 1px solid var(--s-lo);
+  transition:
+    background   var(--dur-fast) var(--ease-snap),
+    color        var(--dur-fast) var(--ease-snap),
+    border-color var(--dur-fast) var(--ease-snap);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+/* Extended touch zone */
+.chip::before {
+  content: '';
+  position: absolute;
+  inset: -7px -2px;
+}
+
+.chip.active {
+  background: rgba(50,215,75,0.10);
+  color: var(--c-green);
+  border-color: rgba(50,215,75,0.26);
+}
+
+.chip:active { opacity: 0.62; }
+
+
+/* ── 10. Task list & room groups ───────────────────────────────── */
+#task-list {
+  flex: 1;
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px var(--page-pad) 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 38px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * Room section header.
+ * Chrome-steel label (cool gradient) + subtle count pill + hairline divider.
+ */
+.room-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  position: relative;
+}
+
+/* Fine hairline separator — no gradient fade, just a clean full-width line */
+.room-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent         0%,
+    rgba(255,255,255,0.07) 12%,
+    rgba(255,255,255,0.055) 88%,
+    transparent         100%
+  );
+}
+
+/*
+ * Room section heading — readable, natural Title Case, ~22px.
+ * Chrome-steel gradient preserved; uppercase/tracking removed.
+ * Using <h2> in JS so margin: 0 is required to suppress default spacing.
+ */
+.room-name {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+  background: var(--grad-chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Task count — subtle pill indicator beside room heading */
+.room-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-4);
+  -webkit-text-fill-color: var(--text-4);
+  letter-spacing: 0.02em;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.05);
+  /* Align baseline with the large room heading */
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+
+.room-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
+/* ── 11. Task cards ─────────────────────────────────────────────── */
+/*
+ * Physical model — three layers:
+ *
+ * ① Base plate surface (background property — solid graphite)
+ *   A true dark graphite (#0d0d10) with an almost-imperceptible status tint.
+ *   No gradient drama here — just material reality.
+ *
+ * ② ::before — directional brushed grain
+ *   Very fine diagonal lines at var(--grain-angle) (scroll-reactive via @property).
+ *   A secondary quadrant radial gradient adds specular catch from above-left.
+ *   Combined opacity is ~1.5% — subliminal texture, not visible pattern.
+ *
+ * ③ ::after — luminous top-edge hairline
+ *   A 1px strip at top: 0. This is where status color appears visually.
+ *   Default: cool pearl-white. Status variants: tinted to status color.
+ *   The gradient bell-curve (transparent → bright center → transparent) simulates
+ *   a machined edge catching overhead light.
+ *
+ * ④ Border (padding-box trick)
+ *   A gradient border that goes bright on the top-left, dim lower-right.
+ *   Status variants tint the top-left corner with the status color.
+ *
+ * Entrance animation: stagger via --i, translateY(7px) only — compositor.
+ */
+
+.task-card {
+  border-radius: var(--radius-card);
+  padding: 18px 18px 15px;
+  position: relative;
+  overflow: hidden;
+
+  /* Floating plate: sharp contact shadow + soft ambient lift */
+  box-shadow:
+    0  1px  0  var(--s-lo) inset,   /* top-surface ambient catch */
+    0  2px  8px rgba(0,0,0,0.72),    /* contact shadow */
+    0  8px 32px rgba(0,0,0,0.48),    /* ambient float */
+    0 18px 56px rgba(0,0,0,0.28);    /* deep ambient */
+
+  /* Default: neutral graphite plate with default titanium border */
+  background:
+    linear-gradient(var(--g0), var(--g0)) padding-box,
+    var(--card-border-default)             border-box;
+  border: 1px solid transparent;
+
+  /* Staggered entrance — --i set inline by JS per card within each group */
+  animation:
+    card-in var(--dur-base) var(--ease-out)
+    calc(var(--i, 0) * 22ms)
+    both;
+
+  /* Compositor-only transition — no layout shift */
+  transition:
+    opacity  var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-snap);
+}
+
+/*
+ * Pseudo ① — Brushed titanium grain
+ *
+ * Two-layer composition:
+ *   a. Very fine repeating stripe in --grain-angle direction
+ *   b. Above-left radial specular: brighter top-left quadrant fades to transparent
+ *
+ * --grain-angle is declared as @property and animated by scroll-timeline,
+ * so the grain direction shifts 5° as the page scrolls (physical material feel).
+ * Falls back to static 143deg when scroll-timeline is unsupported.
+ */
+.task-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    /* Fine directional grain — angle controlled by scroll */
+    repeating-linear-gradient(
+      var(--grain-angle),
+      rgba(255,255,255,0)      0px,
+      rgba(255,255,255,0.012)  1px,
+      rgba(255,255,255,0)      2px,
+      rgba(255,255,255,0)      7px
+    ),
+    /* Quadrant specular: light from above-left, fades diagonally */
+    linear-gradient(
+      138deg,
+      rgba(255,255,255,0.048)  0%,
+      rgba(255,255,255,0.016) 40%,
+      rgba(255,255,255,0)     70%
+    );
+}
+
+/*
+ * Pseudo ② — Luminous top-edge catch
+ *
+ * 1px strip at the very top of the card.
+ * A bell-curve gradient (0 → bright center → 0) simulates a machined edge
+ * catching overhead light. Default: cool pearl-white.
+ * Status variants override this with a colored luminous glow.
+ */
+.task-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  z-index: 2;
+  /* Default: cool pearl catch */
+  background: linear-gradient(
+    90deg,
+    transparent          0%,
+    var(--s-mid)         15%,
+    var(--s-hi)          35%,
+    var(--s-peak)        50%,
+    var(--s-hi)          65%,
+    var(--s-mid)         85%,
+    transparent          100%
+  );
+}
+
+/* Card content rows above pseudos */
+.card-row-main,
+.card-row-meta,
+.card-row-actions {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ── Card state variants ─────────────────────────────────────────
+ *
+ * Each state adjusts three things:
+ *   1. The card surface: microscopic tint in the surface color (barely visible)
+ *   2. The border gradient: status-colored on the top-left catch
+ *   3. The ::after edge: luminous in the status color
+ *
+ * The tinted surface is the most subtle of the three — it shifts the card's
+ * "warmth" perceptibly but not consciously. The edge is the primary signal.
+ * ─────────────────────────────────────────────────────────────── */
+
+/* Future — cool neutral graphite, no urgency */
+.task-card.state-future {
+  background:
+    linear-gradient(#0d0d10, #0c0c0f) padding-box,
+    var(--card-border-default)          border-box;
+}
+/* future::after inherits the default cool pearl edge — no override needed */
+
+/* Soon — warm gold edge, brass border tint */
+.task-card.state-soon {
+  background:
+    /* Barely perceptible warm-gold surface tint */
+    linear-gradient(#0f0f0c, #0d0d0a) padding-box,
+    /* Metallic border bright at top-left, dim elsewhere */
+    linear-gradient(
+      148deg,
+      var(--st-yellow-hi) 0%,
+      rgba(255,214,10,0.18) 35%,
+      var(--s-lo)           65%,
+      rgba(255,214,10,0.10) 100%
+    ) border-box;
+  box-shadow:
+    0  1px  0  var(--s-lo) inset,
+    0  2px  8px rgba(0,0,0,0.72),
+    0  8px 32px rgba(0,0,0,0.45),
+    0 16px 48px rgba(255,214,10,0.04);
+}
+.task-card.state-soon::after {
+  background: linear-gradient(
+    90deg,
+    transparent             0%,
+    rgba(255,214,10,0.32)  15%,
+    rgba(255,228,30,0.62)  40%,
+    rgba(255,235,60,0.76)  50%,
+    rgba(255,228,30,0.62)  60%,
+    rgba(255,214,10,0.32)  85%,
+    transparent            100%
+  );
+  filter: blur(0.3px);
+}
+
+/* Overdue — amber edge, copper-brass border tint */
+.task-card.state-overdue {
+  background:
+    /* Warm amber surface tint — barely discernible */
+    linear-gradient(#0f0e0b, #0d0c09) padding-box,
+    linear-gradient(
+      148deg,
+      var(--st-orange-hi)   0%,
+      rgba(255,159,10,0.18) 35%,
+      var(--s-lo)            65%,
+      rgba(255,159,10,0.10) 100%
+    ) border-box;
+  box-shadow:
+    0  1px  0  var(--s-lo) inset,
+    0  2px  8px rgba(0,0,0,0.72),
+    0  8px 32px rgba(0,0,0,0.45),
+    0 16px 48px rgba(255,159,10,0.05);
+}
+.task-card.state-overdue::after {
+  background: linear-gradient(
+    90deg,
+    transparent             0%,
+    rgba(255,159,10,0.38)  15%,
+    rgba(255,170,20,0.68)  40%,
+    rgba(255,180,30,0.82)  50%,
+    rgba(255,170,20,0.68)  60%,
+    rgba(255,159,10,0.38)  85%,
+    transparent            100%
+  );
+  filter: blur(0.3px);
+}
+
+/* Critical — crimson edge, red metallic border */
+.task-card.state-critical {
+  background:
+    /* Very faint warm-red surface tint — psychological warmth */
+    linear-gradient(#100d0d, #0e0c0c) padding-box,
+    linear-gradient(
+      148deg,
+      var(--st-red-hi)     0%,
+      rgba(255,69,58,0.18) 35%,
+      var(--s-lo)           65%,
+      rgba(255,69,58,0.10) 100%
+    ) border-box;
+  box-shadow:
+    0  1px  0  var(--s-lo) inset,
+    0  2px  8px rgba(0,0,0,0.75),
+    0  8px 32px rgba(0,0,0,0.48),
+    0 16px 52px rgba(255,69,58,0.06);
+}
+.task-card.state-critical::after {
+  background: linear-gradient(
+    90deg,
+    transparent            0%,
+    rgba(255,69,58,0.42)  15%,
+    rgba(255,80,68,0.72)  40%,
+    rgba(255,90,78,0.88)  50%,
+    rgba(255,80,68,0.72)  60%,
+    rgba(255,69,58,0.42)  85%,
+    transparent           100%
+  );
+  filter: blur(0.3px);
+}
+
+/* Done today — receded green plate, desaturated surface */
+.task-card.state-done {
+  opacity: 0.58;
+  transform: scale(0.992);   /* subtle depth-recession — compositor only */
+
+  background:
+    /* Barely perceptible green surface — complete signal without harsh color */
+    linear-gradient(#0b0f0c, #090d0a) padding-box,
+    linear-gradient(
+      148deg,
+      var(--st-green-hi)   0%,
+      rgba(50,215,75,0.12) 40%,
+      var(--s-lo)           70%,
+      rgba(50,215,75,0.08) 100%
+    ) border-box;
+  box-shadow:
+    0 1px  4px rgba(0,0,0,0.60),
+    0 4px 20px rgba(0,0,0,0.40);
+  animation-name: card-in-done;
+}
+.task-card.state-done::after {
+  background: linear-gradient(
+    90deg,
+    transparent            0%,
+    rgba(50,215,75,0.26)  15%,
+    rgba(50,215,75,0.48)  40%,
+    rgba(60,225,85,0.60)  50%,
+    rgba(50,215,75,0.48)  60%,
+    rgba(50,215,75,0.26)  85%,
+    transparent           100%
+  );
+  filter: blur(0.3px);
+}
+.task-card.state-done .task-title    { color: var(--text-3); }
+.task-card.state-done .meta-interval { color: var(--text-4); }
+
+
+/* ── Card content layout ─────────────────────────────────────────  */
+
+.card-row-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+/* 17px — Apple body text, comfortable for older users */
+.task-title {
+  flex: 1;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.30;
+  letter-spacing: -0.22px;
+  color: var(--text);
+  transition: color var(--dur-fast) var(--ease-snap);
+}
+
+.card-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.meta-interval {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-3);
+  letter-spacing: 0.005em;
+  transition: color var(--dur-fast) var(--ease-snap);
+}
+
+
+/* ── 12. Status badges ──────────────────────────────────────────── */
+/*
+ * Tinted glass pills. Height 24px — generous for older users.
+ * Text + color together carry the status; border adds material crispness.
+ * Background opacity is deliberately higher than v2 for readability
+ * in low-light environments.
+ *
+ *   s-done     → green  (✓ Done today)
+ *   s-future   → silver (Due [date])
+ *   s-soon     → yellow (Due today / in Nd)
+ *   s-overdue  → orange (Nd overdue)
+ *   s-critical → red    (Never done / overdue / safety)
+ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.012em;
+  transition:
+    background    var(--dur-fast) var(--ease-snap),
+    color         var(--dur-fast) var(--ease-snap),
+    border-color  var(--dur-fast) var(--ease-snap);
+}
+
+.status-badge.s-done {
+  background: rgba(50,215,75,0.13);
+  color: #30d860;
+  border: 1px solid rgba(50,215,75,0.28);
+}
+
+.status-badge.s-future {
+  background: rgba(255,255,255,0.055);
+  color: var(--text-2);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.status-badge.s-soon {
+  background: rgba(255,214,10,0.11);
+  color: #ffd60a;
+  border: 1px solid rgba(255,214,10,0.26);
+}
+
+.status-badge.s-overdue {
+  background: rgba(255,159,10,0.12);
+  color: #ff9f0a;
+  border: 1px solid rgba(255,159,10,0.28);
+}
+
+.status-badge.s-critical {
+  background: rgba(255,69,58,0.12);
+  color: #ff453a;
+  border: 1px solid rgba(255,69,58,0.28);
+}
+
+
+/* ── 13. Action row ─────────────────────────────────────────────── */
+.card-row-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+
+/* ── 14. Buttons ─────────────────────────────────────────────────── */
+
+/*
+ * Done button — neutral brushed-metal action control.
+ *
+ * Default (ALL non-done states — future, soon, overdue, critical, never done,
+ * professionally maintained, stale flags, prior-day lastDone, mismatched fields):
+ *   Neutral graphite plate. No green coloring of any kind.
+ *   Clearly the primary action without implying completion.
+ *
+ * Completed-today override (state-done card — see below):
+ *   Green forest plate with bright green text and "✓ Done today" label.
+ *   Only renders when statusOf.compute() returns type:'done', which
+ *   requires BOTH task.doneToday === true AND task.lastDone === todayStr()
+ *   in local-calendar timezone. Any mismatch keeps the neutral style.
+ *
+ * 44px min-height = iOS standard touch target.
+ */
+.btn-done {
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 20px;
+  border-radius: var(--radius-btn);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-shrink: 0;
+
+  /* Neutral graphite — no green; sits above Skip visually but implies no state */
+  background: var(--g2);
+  color: var(--text-2);
+
+  /* Physical depth — same specular catch as other plate surfaces */
+  box-shadow:
+    0  1px 0 var(--s-mid) inset,       /* top-edge specular */
+    0 -1px 0 rgba(0,0,0,0.40) inset,   /* bottom shadow */
+    0  1px 5px rgba(0,0,0,0.55),       /* contact */
+    0  3px 12px rgba(0,0,0,0.30);      /* ambient */
+
+  border: 1px solid var(--s-mid);
+
+  transition:
+    opacity    var(--dur-fast) var(--ease-snap),
+    transform  var(--dur-fast) var(--ease-snap),
+    background var(--dur-fast) var(--ease-snap),
+    color      var(--dur-fast) var(--ease-snap),
+    box-shadow var(--dur-fast) var(--ease-snap);
+}
+
+.btn-done:hover {
+  background: var(--g3);
+  color: var(--text);
+}
+
+.btn-done:active {
+  opacity: 0.72;
+  transform: scale(0.952);
+  box-shadow:
+    0 1px 0 var(--s-lo) inset,
+    0 -1px 0 rgba(0,0,0,0.40) inset,
+    0 1px 3px rgba(0,0,0,0.55);
+}
+
+/*
+ * Completed-today treatment.
+ *
+ * Applied via the modifier class btn-done--completed which is set directly
+ * on the <button> element by JS using the shared isCompletedToday(task)
+ * predicate. The predicate requires BOTH:
+ *   task.doneToday === true  AND  task.lastDone === todayStr() (local timezone)
+ *
+ * This selector targets the button itself — no parent-state cascade, no
+ * ancestor lookup, no specificity competition with card-level classes.
+ * A task that was done yesterday, has a stale flag, has a null/mismatch
+ * lastDone, or was just skipped will never receive this class from JS.
+ */
+.btn-done--completed {
+  background: #0c2e18;              /* deep forest graphite */
+  color: var(--c-green);            /* bright iOS green */
+  border-color: rgba(50,215,75,0.18);
+  box-shadow:
+    0  1px 0 rgba(60,230,90,0.20) inset,
+    0 -1px 0 rgba(0,0,0,0.45) inset,
+    0  1px 5px rgba(0,0,0,0.65),
+    0  3px 14px rgba(0,0,0,0.38);
+}
+
+.btn-done--completed:active {
+  box-shadow:
+    0 1px 0 rgba(60,230,90,0.12) inset,
+    0 -1px 0 rgba(0,0,0,0.45) inset,
+    0 1px 3px rgba(0,0,0,0.65);
+}
+
+/*
+ * Skip buttons — etched ghost labels.
+ * Deliberately recede so the Done button is the clear primary action.
+ * 44px min-height = full touch target, visually compact.
+ */
+.btn-skip {
+  min-height: var(--touch);
+  padding: 0 14px;
+  border-radius: var(--radius-btn);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-3);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition:
+    background   var(--dur-fast) var(--ease-snap),
+    color        var(--dur-fast) var(--ease-snap),
+    border-color var(--dur-fast) var(--ease-snap);
+}
+
+.btn-skip:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-2);
+  border-color: rgba(255,255,255,0.10);
+}
+
+.btn-skip:active { opacity: 0.55; }
+
+
+/* ── 15. Empty states ───────────────────────────────────────────── */
+.global-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 80px var(--page-pad) max(env(safe-area-inset-bottom), 52px);
+  gap: 10px;
+  animation: card-in var(--dur-base) var(--ease-out) both;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 4px;
+  -webkit-text-fill-color: initial;
+}
+
+.empty-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.28px;
+  color: var(--text);
+}
+
+.empty-body {
+  font-size: 15px;
+  color: var(--text-3);
+  max-width: 268px;
+  line-height: 1.55;
+}
+
+
+/* ── 16. Keyframes ──────────────────────────────────────────────── */
+
+/*
+ * card-in — compositor-only (transform + opacity).
+ * Subtle 7px displacement, ease-out deceleration. No bounce.
+ */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Done cards enter at their final scale (0.992) and opacity (0.58) */
+@keyframes card-in-done {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.992);
+  }
+  to {
+    opacity: 0.58;
+    transform: translateY(0) scale(0.992);
+  }
+}
+
+/* Header depth shadow — scroll-driven (progressive enhancement below) */
+@keyframes header-depth {
+  from { box-shadow: none; }
+  to {
+    box-shadow:
+      0 14px 64px rgba(0,0,0,0.94),
+      0  2px 10px rgba(0,0,0,0.72);
+  }
+}
+
+/* Scroll-linked grain angle keyframes */
+@keyframes grain-shift {
+  from { --grain-angle: 140deg; }
+  to   { --grain-angle: 148deg; }
+}
+
+
+/* ── 17. Scroll-reactive specular ──────────────────────────────── */
+/*
+ * Progressive enhancement — only runs on engines that support
+ * scroll-driven animations (Chrome 115+, Safari 18+, Firefox behind flag).
+ * Falls back gracefully to static grain and no header shadow.
+ *
+ * Effect 1: header gains depth shadow as user scrolls (already in v2).
+ * Effect 2: --grain-angle on :root shifts 140→148° over 1000px of scroll.
+ *   Because @property declares --grain-angle with syntax: '<angle>' and
+ *   inherits: true, it propagates to all .task-card::before gradients
+ *   that reference var(--grain-angle). The result: brushed grain subtly
+ *   rotates as you scroll, like physical metal tilting under a fixed light.
+ *   The change is ~8° over full scroll — perceptible but never jarring.
+ */
+@supports (animation-timeline: scroll()) {
+  /* Header depth — deepens as content scrolls beneath */
+  .app-header {
+    animation: header-depth linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 80px;
+  }
+
+  /* Grain angle shift — light-on-metal parallax */
+  :root {
+    animation: grain-shift linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0px 1000px;
+  }
+}
+
+
+/* ── 18. Reduced-motion ─────────────────────────────────────────── */
+/*
+ * Disables ALL animation and transition.
+ * Status meaning is carried by color + text + border shape — never motion.
+ * Progress bar gets instant width (no smooth fill).
+ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:        0.001ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.001ms !important;
+  }
+
+  /* Instant progress fill */
+  .header-progress-fill {
+    transition: none !important;
+  }
+
+  /* Disable scroll-linked animations entirely */
+  .app-header, :root {
+    animation: none !important;
+  }
+}
+
+
+/* ── 19. Accessibility ──────────────────────────────────────────── */
+[hidden] { display: none !important; }
+
+/*
+ * Focus ring: 2px green outline — visible on all dark and tinted surfaces.
+ * offset: 3px so it clears the element border.
+ */
+:focus-visible {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Pill-radius focus for round controls */
+.chip:focus-visible,
+.toggle-due-now:focus-visible,
+.search-wrap:focus-within .search-input:focus-visible {
+  border-radius: var(--radius-pill);
+}
+
+.btn-done:focus-visible {
+  border-radius: var(--radius-btn);
+}
+
+
+/* ── 20. Desktop ────────────────────────────────────────────────── */
+@media (min-width: 600px) {
+  :root {
+    --page-pad:    24px;
+    --header-h:    76px;
+    --radius-card: 18px;
+  }
+
+  #task-list {
+    padding-top:    34px;
+    padding-bottom: 72px;
+  }
+
+  .task-title {
+    font-size: 17px;   /* keep consistent — 17px is correct at all widths */
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   §21  Controls second row  (toggle + room picker side-by-side)
+════════════════════════════════════════════════════════════════ */
+.controls-second-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 10px;
+}
+
+/* Stretch room picker to fill the row now that it stands alone */
+.controls-second-row .room-picker-btn {
+  flex: 1;
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   §22  Room picker trigger button
+════════════════════════════════════════════════════════════════ */
+/*
+ * 44 × 44 minimum touch target.
+ * Neutral graphite plate — same material language as skip buttons.
+ * Shows the active room name with a chevron indicating expandability.
+ */
+.room-picker-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  min-height: var(--touch);           /* 44px invisible touch zone via margin */
+  padding: 0 12px 0 10px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  max-width: 52%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+
+  background: var(--g2);
+  color: var(--text-3);
+  border: 1px solid var(--s-lo);
+
+  transition:
+    background   var(--dur-fast) var(--ease-snap),
+    color        var(--dur-fast) var(--ease-snap),
+    border-color var(--dur-fast) var(--ease-snap);
+}
+
+/* Extended touch zone */
+.room-picker-btn::before {
+  content: '';
+  position: absolute;
+  inset: -5px -4px;
+}
+
+.room-picker-btn:active { opacity: 0.65; }
+
+.room-picker-btn.active {
+  background: rgba(50,215,75,0.10);
+  color: var(--c-green);
+  border-color: rgba(50,215,75,0.26);
+}
+
+.room-picker-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.room-picker-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.room-picker-chevron {
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: transform var(--dur-fast) var(--ease-snap);
+}
+
+.room-picker-btn[aria-expanded="true"] .room-picker-chevron {
+  transform: rotate(180deg);
+}
+
+.room-picker-btn:focus-visible { border-radius: var(--radius-pill); }
+
+
+/* ════════════════════════════════════════════════════════════════
+   §23  Room picker dialog / bottom sheet
+════════════════════════════════════════════════════════════════ */
+/*
+ * Uses native <dialog> element:
+ *   – showModal() provides focus trapping and ::backdrop
+ *   – Escape key handled natively by browser
+ *   – Position overrides browser centering for bottom-sheet layout
+ */
+/* Room-picker dialog — bottom-anchored, transparent, never animated.
+   The visual bottom-sheet look comes entirely from .rp-sheet inside.
+   Safari on iOS can misplace a <dialog> that is transformed in the
+   top layer, so the dialog itself is never given a transform or
+   translation animation — only .rp-sheet animates. */
+.rp-dialog {
+  position: fixed;
+  inset: auto 0 0 0;   /* anchor to viewport bottom-right-left */
+  margin: 0 auto;
+  width: 100%;
+  max-width: min(640px, 100%);
+  max-height: 82svh;
+  max-height: 82dvh;
+  border: none;
+  padding: 0;
+  background: transparent;  /* .rp-sheet supplies the background */
+  overflow: hidden;          /* clips the sheet during slide-up animation */
+}
+
+.rp-dialog::backdrop {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+/* Slide-up entrance — applied to the inner SHEET, never to <dialog>.
+   JS adds .is-entering before showModal() and removes it after animation
+   (or a safety timeout) so no stale translateY lingers on the sheet.
+   The sheet's natural state (translateY 0) is always visible; the
+   animation is progressive enhancement only. */
+@keyframes rpSheetSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.rp-dialog.is-entering .rp-sheet {
+  animation: rpSheetSlideUp var(--dur-base) var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rp-dialog.is-entering .rp-sheet { animation: none; }
+}
+
+.rp-sheet {
+  /* Column flex: handle → header → search → scrollable list.
+     max-height caps the sheet so the list's flex:1 distributes within
+     that bound and overflow-y:auto on the list triggers scroll. */
+  max-height: 82vh;    /* fallback for browsers without svh/dvh */
+  max-height: 82svh;   /* stable viewport height (ignores UA chrome) */
+  max-height: 82dvh;   /* dynamic viewport height (preferred on mobile) */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Visual styling (moved from .rp-dialog so the dialog itself is bare) */
+  background: var(--g0);
+  border-top: 1px solid var(--sep);
+  border-radius: 20px 20px 0 0;
+  /* Home-indicator clearance */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Drag handle visual affordance */
+.rp-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+.rp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 10px;
+  flex-shrink: 0;
+}
+
+.rp-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.rp-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  color: var(--text-3);
+  border-radius: 50%;
+  margin-right: -10px;
+  transition: color var(--dur-fast) var(--ease-snap),
+              background var(--dur-fast) var(--ease-snap);
+}
+
+.rp-close:hover {
+  color: var(--text-2);
+  background: var(--g2);
+}
+
+/* Search field inside the dialog */
+.rp-search-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--g2);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--s-lo);
+  margin: 0 16px 12px;
+  flex-shrink: 0;
+  transition: border-color var(--dur-fast) var(--ease-snap);
+}
+
+.rp-search-wrap:focus-within {
+  border-color: rgba(255,255,255,0.20);
+}
+
+.rp-search-icon {
+  margin-left: 14px;
+  flex-shrink: 0;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.rp-search {
+  flex: 1;
+  height: var(--touch);
+  padding: 0 14px;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: var(--text);
+  caret-color: var(--c-green);
+}
+
+.rp-search::placeholder { color: var(--text-3); }
+.rp-search::-webkit-search-cancel-button { display: none; }
+
+/* Room option list — scrollable region inside the sheet */
+.rp-list {
+  flex: 1;          /* fill remaining height in the sheet flex column */
+  min-height: 0;    /* required for flex children to scroll correctly  */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0 8px 8px;
+  scrollbar-width: none;
+}
+
+.rp-list::-webkit-scrollbar { display: none; }
+
+/* Individual room option */
+.rp-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--touch);
+  padding: 0 12px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-snap),
+              color      var(--dur-fast) var(--ease-snap);
+}
+
+.rp-option:active {
+  background: var(--g2);
+}
+
+.rp-option[aria-selected="true"] {
+  color: var(--c-green);
+  font-weight: 600;
+}
+
+.rp-option-check {
+  flex-shrink: 0;
+  color: var(--c-green);
+  opacity: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.rp-option[aria-selected="true"] .rp-option-check {
+  opacity: 1;
+}
+
+/* Custom room actions retain the native picker row's 44px touch target. */
+.rp-option:has(.rp-option-delete) {
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 4px 12px;
+}
+.rp-option:has(.rp-option-delete) > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rp-option-delete {
+  position: static;
+  flex: 0 0 64px;
+  min-height: var(--touch);
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(255,69,58,0.10);
+  color: #ff6961;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rp-option-delete:active { opacity: 0.65; }
+.rp-create-room {
+  width: calc(100% - 28px);
+  min-height: var(--touch);
+  margin: 0 14px 8px;
+  border: 1px solid rgba(50,215,75,0.28);
+  border-radius: 11px;
+  background: rgba(50,215,75,0.09);
+  color: var(--c-green);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.rp-create-room:active { opacity: 0.65; }
+
+/* "No rooms match" message */
+.rp-empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--text-3);
+  font-size: 15px;
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   §24  Onboarding dialog — first-use Smart Start
+════════════════════════════════════════════════════════════════ */
+.ob-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(480px, calc(100vw - 40px));
+  border: 1px solid var(--sep);
+  border-radius: 20px;
+  padding: 0;
+  background: var(--g0);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.ob-dialog::-webkit-scrollbar { display: none; }
+
+.ob-dialog::backdrop {
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+@keyframes obFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.ob-dialog[open] {
+  animation: obFadeIn var(--dur-base) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ob-dialog[open] { animation: none; }
+}
+
+.ob-card {
+  padding: 32px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ob-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ob-logo {
+  flex-shrink: 0;
+  color: var(--c-green);
+  opacity: 0.9;
+}
+
+.ob-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.ob-body {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.ob-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Base choice card */
+.ob-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--s-lo);
+  background: var(--g1);
+  transition: background   var(--dur-fast) var(--ease-snap),
+              border-color var(--dur-fast) var(--ease-snap),
+              opacity      var(--dur-fast) var(--ease-snap);
+}
+
+.ob-choice:hover { background: var(--g2); }
+.ob-choice:active { opacity: 0.75; }
+
+/* Primary (Balanced Start) */
+.ob-choice--primary {
+  background: rgba(50,215,75,0.06);
+  border-color: rgba(50,215,75,0.22);
+}
+
+.ob-choice--primary:hover {
+  background: rgba(50,215,75,0.10);
+}
+
+.ob-choice-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-green);
+  background: rgba(50,215,75,0.12);
+  border: 1px solid rgba(50,215,75,0.22);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
+.ob-choice-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ob-choice-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.ob-safety-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(255,159,10,0.07);
+  border: 1px solid rgba(255,159,10,0.18);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.ob-safety-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--c-orange);
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   §25  Empty action button (all-clear state)
+════════════════════════════════════════════════════════════════ */
+.empty-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--g2);
+  color: var(--text-2);
+  border: 1px solid var(--s-mid);
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background var(--dur-fast) var(--ease-snap),
+              color      var(--dur-fast) var(--ease-snap);
+}
+
+.empty-action-btn:hover {
+  background: var(--g3);
+  color: var(--text);
+}
+
+.empty-action-btn:active { opacity: 0.72; }
+
+
+/* ════════════════════════════════════════════════════════════════
+   §27  Backup button (header top-right)
+════════════════════════════════════════════════════════════════ */
+/*
+ * header-inner gains flex layout so the existing header-text
+ * stays left-aligned and the backup button floats to the right.
+ */
+.header-inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.backup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch);   /* 44pt — iOS minimum touch target */
+  min-height: var(--touch);
+  flex-shrink: 0;
+  margin-top: 6px;
+  margin-right: -10px;       /* optical alignment with content edge */
+  border-radius: 50%;
+  color: var(--text-3);
+  transition: color       var(--dur-fast) var(--ease-snap),
+              background  var(--dur-fast) var(--ease-snap);
+}
+
+.backup-btn:hover  { color: var(--text-2); background: var(--g2); }
+.backup-btn:active { opacity: 0.72; }
+
+
+/* ════════════════════════════════════════════════════════════════
+   §28  Backup & Restore dialog / bottom sheet
+════════════════════════════════════════════════════════════════ */
+/*
+ * Mirrors the room-picker bottom-sheet pattern (§23):
+ *   – native <dialog> with showModal() for focus trapping
+ *   – Escape closes natively
+ *   – slides up from the bottom
+ */
+.bk-dialog {
+  position: fixed;
+  inset: auto 0 0 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: min(640px, 100%);
+  border: none;
+  padding: 0;
+  border-radius: 20px 20px 0 0;
+  background: var(--g0);
+  border-top: 1px solid var(--sep);
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bk-dialog::backdrop {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+@keyframes bkSlideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.bk-dialog[open] {
+  animation: bkSlideUp var(--dur-base) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bk-dialog[open] { animation: none; }
+}
+
+.bk-sheet {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Drag-handle visual affordance (decorative) */
+.bk-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+/* Title row */
+.bk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 10px;
+}
+
+.bk-title {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+
+/* Close button */
+.bk-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  color: var(--text-3);
+  border-radius: 50%;
+  margin-right: -10px;
+  transition: color       var(--dur-fast) var(--ease-snap),
+              background  var(--dur-fast) var(--ease-snap);
+}
+.bk-close:hover { color: var(--text-2); background: var(--g2); }
+
+/* Content panels */
+.bk-body,
+.bk-confirm {
+  padding: 4px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Device-only disclaimer */
+.bk-desc {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+/* "Last backup: YYYY-MM-DD" */
+.bk-last-export {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: -4px;
+}
+
+/* Stacked action buttons */
+.bk-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Base action button — large, comfortable, 44pt minimum height */
+.bk-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--touch);
+  padding: 0 20px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  background: var(--g2);
+  color: var(--text-2);
+  border: 1px solid var(--s-lo);
+  cursor: pointer;
+  text-align: center;
+  transition: background var(--dur-fast) var(--ease-snap),
+              color      var(--dur-fast) var(--ease-snap),
+              opacity    var(--dur-fast) var(--ease-snap);
+}
+
+.bk-action-btn:hover  { background: var(--g3); color: var(--text); }
+.bk-action-btn:active { opacity: 0.72; }
+.bk-action-btn:disabled { opacity: 0.40; pointer-events: none; }
+
+/* Primary: Export */
+.bk-action-btn--primary {
+  background: rgba(50,215,75,0.07);
+  color: var(--c-green);
+  border-color: rgba(50,215,75,0.22);
+}
+.bk-action-btn--primary:hover {
+  background: rgba(50,215,75,0.12);
+  color: var(--c-green);
+}
+
+/* Danger: Restore */
+.bk-action-btn--danger {
+  background: rgba(255,69,58,0.07);
+  color: var(--c-red);
+  border-color: rgba(255,69,58,0.22);
+}
+.bk-action-btn--danger:hover {
+  background: rgba(255,69,58,0.13);
+  color: var(--c-red);
+}
+
+/* Undo — smaller, lower emphasis */
+.bk-action-btn--undo {
+  font-size: 14px;
+  color: var(--text-3);
+  border-color: transparent;
+  background: transparent;
+}
+.bk-action-btn--undo:hover { background: var(--g2); color: var(--text-2); }
+
+/* Confirmation message */
+.bk-confirm-msg {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+  white-space: pre-line;
+}
+
+/* Status / feedback line (aria-live) */
+.bk-status {
+  min-height: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--c-green);
+  padding: 0 20px 16px;
+}
+
+.bk-status:empty { padding-bottom: 4px; }
+
+.bk-status--error { color: var(--c-red); }
+
+
+/* ════════════════════════════════════════════════════════════════
+   §29  Recovery notice (damaged storage or interrupted import)
+════════════════════════════════════════════════════════════════ */
+/*
+ * Shown inside .bk-body when recoveryStore.hasUndismissed() is true
+ * or when an interrupted import was rolled back at startup.
+ * Uses an amber tone to signal "attention needed" without alarm.
+ */
+.bk-recovery {
+  padding: 14px 16px;
+  background: rgba(255, 159, 10, 0.07);
+  border: 1px solid rgba(255, 159, 10, 0.22);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bk-recovery-msg {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   §26  Safe-area horizontal padding on content containers
+════════════════════════════════════════════════════════════════ */
+/*
+ * Ensures content clears iPhone notch/Dynamic Island in landscape
+ * and stays within the visual safe zone on all orientations.
+ * Uses max() so the normal --page-pad applies when insets are 0.
+ */
+.header-inner {
+  padding-left:  max(var(--page-pad), env(safe-area-inset-left));
+  padding-right: max(var(--page-pad), env(safe-area-inset-right));
+}
+
+.controls {
+  padding-left:  max(var(--page-pad), env(safe-area-inset-left));
+  padding-right: max(var(--page-pad), env(safe-area-inset-right));
+}
+
+#task-list {
+  padding-left:  max(var(--page-pad), env(safe-area-inset-left));
+  padding-right: max(var(--page-pad), env(safe-area-inset-right));
+}
+
+/* ════════════════════════════════════════════════════════════════
+   §30  app-title as interactive button
+════════════════════════════════════════════════════════════════ */
+/*
+ * The HomeTask brand wordmark becomes a pressable button.
+ * All visual styles (gradient, size, weight) come from the original
+ * .app-title rule; these additions only add button-reset behaviour
+ * and a 44px touch target without changing the visual appearance.
+ */
+button.app-title {
+  /* Reset button defaults */
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  /* 44px touch target (iOS standard) */
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+}
+button.app-title:active { opacity: 0.70; }
+button.app-title:focus-visible {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   §31  Compact search button + controls-second-row layout
+════════════════════════════════════════════════════════════════ */
+
+/*
+ * controls-second-row: room picker on left, search button on right.
+ * Previously only contained the room picker; now flex row with gap.
+ */
+.controls-second-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+/*
+ * Compact magnifying-glass search button.
+ * 44×44 touch target, circular, matches the design language of
+ * other icon buttons in the header (backup-btn, rp-close, etc.).
+ */
+.search-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width:  var(--touch);
+  min-height: var(--touch);
+  border-radius: 50%;
+  color: var(--text-2);
+  background: var(--g2);
+  border: 1px solid var(--s-lo);
+  flex-shrink: 0;
+  transition:
+    color       var(--dur-fast) var(--ease-snap),
+    background  var(--dur-fast) var(--ease-snap),
+    border-color var(--dur-fast) var(--ease-snap);
+}
+.search-icon-btn:hover { border-color: var(--s-mid); }
+.search-icon-btn:active { opacity: 0.65; }
+.search-icon-btn:focus-visible {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: 2px;
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   §32  Home screen
+════════════════════════════════════════════════════════════════ */
+/*
+ * Calm destination screen shown after onboarding and when tapping
+ * the HomeTask brand. Contains a workload summary and 5 nav cards.
+ *
+ * Layout: full-height flex column, scrollable.
+ * Fills the space below the header.
+ */
+.home-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 36px max(var(--page-pad), env(safe-area-inset-left))
+           max(env(safe-area-inset-bottom, 0px), 32px)
+           max(var(--page-pad), env(safe-area-inset-right));
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/*
+ * Home navigation — clear visual hierarchy:
+ *   1. .home-primary   — Today, dominant full-width action with count
+ *   2. .home-secondary — This Week · Browse Rooms (2-up grid)
+ *   3. .home-tertiary  — All N Tasks · Backup & Restore (quiet links)
+ */
+.home-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* PRIMARY: Today */
+.home-primary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 108px;
+  padding: 22px 20px;
+  border-radius: 18px;
+  background: var(--g2);
+  border: 1px solid var(--s-mid);
+  cursor: pointer;
+  text-align: left;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    background    var(--dur-fast) var(--ease-snap),
+    border-color  var(--dur-fast) var(--ease-snap);
+}
+.home-primary:active { opacity: 0.60; }
+.home-primary:focus-visible {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: 2px;
+  border-radius: 18px;
+}
+
+.hp-icon    { color: var(--text-2); flex-shrink: 0; }
+.hp-chevron { color: var(--text-3); flex-shrink: 0; margin-left: auto; }
+
+.hp-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.hp-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.15;
+}
+
+/* Live workload count — "10 Tasks Need Attention Today" */
+.hp-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-3);
+  line-height: 1.35;
+}
+
+/* SECONDARY: This Week · Browse Rooms */
+.home-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* TERTIARY: quiet text-style links, clearly less prominent */
+.home-tertiary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.home-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--s-lo);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-2);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.home-link:active { opacity: 0.60; }
+.home-link:focus-visible {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: 2px;
+}
+
+/*
+ * Navigation card button.
+ * Min 44px height satisfies iOS touch target. Actual rendered height
+ * is ~96px to give the icon + label enough breathing room.
+ */
+.home-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 96px;
+  padding: 18px 12px;
+  border-radius: 16px;
+  background: var(--g2);
+  border: 1px solid var(--s-lo);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    background    var(--dur-fast) var(--ease-snap),
+    border-color  var(--dur-fast) var(--ease-snap);
+}
+
+.home-nav-btn:active { opacity: 0.60; }
+
+.home-nav-btn:focus-visible {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: 2px;
+  border-radius: 16px;
+}
+
+/* Backup & Restore card spans both grid columns */
+.home-nav-btn--wide {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  gap: 12px;
+  min-height: 60px;
+  padding: 14px 20px;
+}
+
+.hnb-icon {
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+
+.hnb-label {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+/* ── Header "N Total Tasks" button (View All N Tasks) ─────────── */
+.total-tasks-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 5px 12px;
+  min-height: 28px;
+  border-radius: var(--radius-pill);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--s-lo);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-3);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.total-tasks-btn:active { opacity: 0.6; }
+.total-tasks-btn:focus-visible {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: 2px;
+}
+
+/* ── Search-result reveal highlight ───────────────────────────── */
+@keyframes cardFlash {
+  0%   { outline-color: rgba(50,215,75,0.85); background-color: rgba(50,215,75,0.10); }
+  100% { outline-color: rgba(50,215,75,0);    background-color: transparent; }
+}
+.task-card.flash-highlight {
+  outline: 2px solid rgba(50,215,75,0.85);
+  outline-offset: 2px;
+  animation: cardFlash 1.5s var(--ease-out) both;
+}
+
+/* ── Background scroll lock (any modal sheet open) ────────────── */
+/* body gets position:fixed + top:-scrollY inline from scrollLock JS;
+   this class just belts-and-suspenders the overflow. */
+body.scroll-locked { overflow: hidden; }
+
+/* ── Build identifier inside Backup & Restore dialog ──────────── */
+.bk-build {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-4);
+  text-align: center;
+  margin: 10px 0 0;
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   §33  Search dialog — bottom sheet
+════════════════════════════════════════════════════════════════ */
+/*
+ * Mirrors the room-picker dialog pattern exactly:
+ *  - <dialog> is the transparent full-screen backdrop.
+ *  - .sr-sheet is the visible panel with slide-up animation.
+ *  - .is-entering triggers the rpSheetSlideUp animation from §19.
+ */
+
+/*
+ * Do NOT use "all: unset" here. The UA stylesheet has:
+ *   dialog:not([open]) { display: none; }
+ * and author styles always beat UA styles, so "all: unset" would set
+ * display:initial (inline) and prevent the browser from hiding the dialog
+ * after dialog.close() is called. Use targeted resets instead.
+ */
+.sr-dialog {
+  /* Room-picker pattern: the dialog is a stable, bottom-anchored clip
+     container. It is NEVER animated or transformed — only the inner
+     .sr-sheet animates. max-height uses vh → svh → dvh fallbacks. */
+  position: fixed;
+  inset: auto 0 0 0;   /* anchor to viewport bottom-right-left */
+  margin: 0 auto;
+  width: 100%;
+  max-width: min(640px, 100%);
+  max-height: 88vh;
+  max-height: 88svh;
+  max-height: 88dvh;
+  border: none;
+  padding: 0;
+  background: transparent;  /* .sr-sheet supplies the background */
+  color: inherit;
+  box-sizing: border-box;
+  z-index: 300;
+  overflow: hidden;          /* clips the sheet during slide-up animation */
+}
+
+/* Explicit closed-state safety net — belt-and-suspenders */
+.sr-dialog:not([open]) {
+  display: none;
+}
+
+.sr-dialog::backdrop {
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/*
+ * Sheet — same max-height rules as .rp-sheet to prevent the
+ * circular-dependency height issue on Safari/iPhone.
+ * Do NOT set height: 100% — use max-height only.
+ */
+.sr-sheet {
+  background: var(--g2);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--s-mid);
+  max-height: 88vh;
+  max-height: 88svh;
+  max-height: 88dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+}
+
+/* Slide-up entrance — .is-entering lives on the DIALOG (room-picker
+   pattern); only the inner sheet animates. The sheet's natural state
+   (translateY 0) is always visible; animation is enhancement only. */
+.sr-dialog.is-entering .sr-sheet {
+  animation: rpSheetSlideUp var(--dur-base) var(--ease-out) both;
+}
+
+/* Pull handle */
+.sr-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.18);
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+/* ── Sheet header ─────────────────────────────────────────────── */
+.sr-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+  flex-shrink: 0;
+}
+
+.sr-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0;
+}
+
+/* Close × button — 44×44 touch target, circular */
+.sr-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width:  var(--touch);
+  min-height: var(--touch);
+  border-radius: 50%;
+  color: var(--text-3);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--s-lo);
+  transition: color var(--dur-fast) var(--ease-snap);
+}
+.sr-close:active { opacity: 0.65; }
+
+/* ── Search input row ─────────────────────────────────────────── */
+.sr-input-wrap {
+  display: flex;
+  align-items: center;
+  margin: 0 14px 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--s-lo);
+  border-radius: var(--radius-pill);
+  padding: 0 4px 0 14px;
+  flex-shrink: 0;
+  transition: border-color var(--dur-fast) var(--ease-snap);
+}
+.sr-input-wrap:focus-within {
+  border-color: rgba(255,255,255,0.18);
+}
+
+.sr-input-icon {
+  flex-shrink: 0;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+/* 16px prevents iOS zoom-on-focus. Green caret matches brand. */
+.sr-input {
+  flex: 1;
+  height: var(--touch);
+  padding: 0 8px;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: var(--text);
+  caret-color: var(--c-green);
+}
+.sr-input::placeholder { color: var(--text-3); }
+.sr-input::-webkit-search-cancel-button { display: none; }
+
+/* Clear × button inside input row */
+.sr-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: 50%;
+  color: var(--text-3);
+  flex-shrink: 0;
+  transition: color var(--dur-fast) var(--ease-snap);
+}
+.sr-clear:active { opacity: 0.65; }
+
+/* ── Scrollable body — the ONLY scrollable region in the sheet ── */
+.sr-body {
+  flex: 1;
+  min-height: 0;              /* allow flex child to shrink → scroll */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;  /* never chain scroll to the page */
+  padding: 2px 0 max(env(safe-area-inset-bottom, 0px), 8px);
+}
+
+/* ── Section headers (Recent / Rooms) ─────────────────────────── */
+.sr-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px 5px;
+}
+
+.sr-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+
+.sr-clear-recents {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-green);
+  background: none;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.sr-clear-recents:active { opacity: 0.65; }
+
+/* ── Recent-search chips ──────────────────────────────────────── */
+.sr-recents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 18px 14px;
+}
+
+.sr-recent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--g3);
+  border: 1px solid var(--s-lo);
+  color: var(--text-2);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.sr-recent-chip:active { opacity: 0.65; }
+
+/* ── Room suggestion chips ────────────────────────────────────── */
+.sr-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 18px 14px;
+}
+
+.sr-suggest-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(50,215,75,0.07);
+  border: 1px solid rgba(50,215,75,0.16);
+  color: var(--c-green);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.sr-suggest-chip:active { opacity: 0.65; }
+
+/* ── Results (grouped by room) ────────────────────────────────── */
+.sr-group {
+  margin-bottom: 2px;
+}
+
+.sr-group-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px 4px;
+}
+
+/* Room header — a real button: tapping it opens the room */
+.sr-group-room {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  padding: 6px 0;
+  min-height: 28px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.sr-group-room:active { opacity: 0.6; }
+
+.sr-group-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-4);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-pill);
+  padding: 1px 7px;
+}
+
+.sr-group-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Result rows are real <button>s inside plain <li> wrappers */
+.sr-result-li { list-style: none; }
+
+.sr-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 13px 18px;
+  min-height: var(--touch);
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background var(--dur-fast) var(--ease-snap);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.sr-result-li:last-child .sr-result { border-bottom: none; }
+.sr-result:active { background: rgba(255,255,255,0.05); }
+
+.sr-result-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  line-height: 1.35;
+}
+
+/* Status badge — compact, no min-height needed (list context) */
+.sr-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+}
+.sr-status--done     { background: rgba(50,215,75,0.12);  color: #30d860; border: 1px solid rgba(50,215,75,0.24); }
+.sr-status--soon     { background: rgba(255,214,10,0.10); color: #ffd60a; border: 1px solid rgba(255,214,10,0.22); }
+.sr-status--overdue  { background: rgba(255,159,10,0.11); color: #ff9f0a; border: 1px solid rgba(255,159,10,0.24); }
+.sr-status--critical { background: rgba(255,69,58,0.11);  color: #ff453a; border: 1px solid rgba(255,69,58,0.24); }
+.sr-status--future   { background: rgba(255,255,255,0.05); color: var(--text-2); border: 1px solid rgba(255,255,255,0.08); }
+
+/* ── Empty state (no results) ─────────────────────────────────── */
+.sr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 36px 28px;
+  gap: 8px;
+}
+.sr-empty-icon  { font-size: 36px; line-height: 1; }
+.sr-empty-title { font-size: 16px; font-weight: 600; color: var(--text); margin: 0; }
+.sr-empty-body  { font-size: 14px; color: var(--text-3); line-height: 1.55; margin: 0; }
+
+/* Pending deletion remains undoable even when Search occupies the native dialog layer. */
+.sr-pending-delete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,159,10,0.28);
+  border-radius: 10px;
+  background: rgba(255,159,10,0.08);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.sr-pending-delete button {
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent, #4a90d9);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.sr-delete-failure {
+  margin: 8px 0 14px;
+  padding: 12px;
+  border: 1px solid rgba(255,69,58,0.36);
+  border-radius: 10px;
+  background: rgba(255,69,58,0.12);
+  color: #ff6961;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* ── §30 Shadow diagnostic section (CP4C) ──────────────────────── */
+.bk-shadow-check[hidden] { display: none; }       /* explicit — overrides any cascade */
+.bk-shadow-check {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border, #2a2a2e);
+}
+.bk-shadow-title  { font-size: .875rem; font-weight: 600; margin: 0 0 .25rem; color: var(--text, #f0f0f2); }
+.bk-shadow-status { font-size: .8125rem; color: var(--text-3, #8a8a9a); margin: 0 0 .5rem; }
+.bk-shadow-share  {
+  font-size: .8125rem;
+  padding: .25rem .75rem;
+  border: 1px solid currentColor;
+  border-radius: .25rem;
+  background: transparent;
+  color: var(--text, #f0f0f2);
+  cursor: pointer;
+}
+.bk-shadow-share:hover  { opacity: .8; }
+.bk-shadow-share:active { opacity: .6; }
+
+
+/* ════════════════════════════════════════════════════════════════
+   §F1  Custom Tasks — FAB · Delete · Confirmation · Add Sheet · Toast
+════════════════════════════════════════════════════════════════ */
+
+/* ── Room header additions ───────────────────────────────────── */
+/* Wrap count pill + add button so they sit flush to the right */
+.room-header-right {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-left: auto;
+  margin-bottom: 2px;     /* match the old room-count margin */
+}
+/* Override old margin now that the pill is inside .room-header-right */
+.room-header-right .room-count {
+  align-self: auto;
+  margin-bottom: 0;
+}
+
+/* "+" button beside room task count */
+.room-add-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-2);
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  /* 44×44 touch target via padding area */
+  touch-action: manipulation;
+  /* Extend tap area without changing visual size */
+  position: relative;
+}
+.room-add-btn::before {
+  content: '';
+  position: absolute;
+  inset: -9px;         /* expands tap target to 44px */
+}
+.room-add-btn:hover  { background: rgba(255,255,255,0.10); }
+.room-add-btn:active { opacity: 0.6; }
+
+/* ── Safe custom-task deletion confirmation ──────────────────── */
+.dc-dialog {
+  margin: auto;
+  width: min(420px, calc(100vw - 32px));
+  border: none;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  border-radius: 18px;
+}
+.dc-dialog::backdrop {
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+.dc-card {
+  padding: 24px 20px 20px;
+  background: var(--g0);
+  border: 1px solid var(--sep);
+  border-radius: 18px;
+  box-shadow: 0 18px 52px rgba(0,0,0,0.5);
+}
+.dc-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+}
+.dc-message {
+  margin: 10px 0 0;
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.dc-error {
+  margin: 10px 0 0;
+  color: var(--danger, #ff3b30);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.dc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+.dc-cancel,
+.dc-confirm {
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.dc-cancel {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: var(--text);
+}
+.dc-confirm {
+  border: none;
+  background: var(--danger, #ff3b30);
+  color: #fff;
+}
+.dc-confirm:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+/* ── Trash icon inside custom task cards ─────────────────────── */
+/* Positioned on the right side of card-row-meta */
+.btn-delete {
+  margin-left: auto;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  /* 44×44 touch area */
+  position: relative;
+}
+.btn-delete::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+.btn-delete:hover  { color: var(--danger, #ff5555); background: rgba(255,85,85,0.08); }
+.btn-delete:active { opacity: 0.7; }
+
+/* card-row-meta must be a flex row to place delete on the right */
+.card-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Inline delete confirmation row ──────────────────────────── */
+.card-row-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(255,55,55,0.06);
+  border-radius: 10px;
+}
+
+.confirm-msg {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-confirm-delete,
+.btn-cancel-confirm {
+  flex: 1;
+  height: 44px;
+  border-radius: var(--radius-sm, 10px);
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.btn-confirm-delete {
+  background: var(--danger, #ff3b30);
+  color: #fff;
+}
+.btn-confirm-delete:active { opacity: 0.8; }
+
+.btn-cancel-confirm {
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+}
+.btn-cancel-confirm:active { opacity: 0.7; }
+
+/* ── Floating Action Button ──────────────────────────────────── */
+.fab {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right, 0px) + 16px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  z-index: 200;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent, #4a90d9);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.fab:hover  { filter: brightness(1.1); }
+.fab:active { transform: scale(0.94); }
+
+/* ── Toast notification ──────────────────────────────────────── */
+.ht-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
+  transform: translateX(-50%) translateY(20px);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #2a2a32;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 12px 16px;
+  min-width: 240px;
+  max-width: min(340px, calc(100vw - 40px));
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.ht-toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+.ht-toast-msg {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text, #f0f0f2);
+  line-height: 1.35;
+}
+.ht-toast-undo {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: var(--accent, #4a90d9);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ht-toast-undo:hover  { background: rgba(74,144,217,0.12); }
+.ht-toast-undo:active { opacity: 0.7; }
+.ht-toast--error { border-color: rgba(255,85,85,0.45); }
+
+/* ── Room picker custom-room divider ─────────────────────────── */
+.rp-divider {
+  padding: 10px 16px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 4px;
+}
+
+/* ── Add Task dialog — bottom sheet ──────────────────────────── */
+/* Mirrors .rp-dialog / .bk-dialog pattern exactly */
+.at-dialog {
+  position: fixed;
+  inset: auto 0 0 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: min(640px, 100%);
+  max-height: 92svh;
+  max-height: 92dvh;
+  border: none;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.at-dialog::backdrop {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+@keyframes atSheetSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.at-dialog.is-entering .at-sheet {
+  animation: atSheetSlideUp var(--dur-base) var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .at-dialog.is-entering .at-sheet { animation: none; }
+}
+
+.at-sheet {
+  max-height: 92vh;
+  max-height: 92svh;
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--g0);
+  border-top: 1px solid var(--sep);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.at-handle {
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+.at-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 12px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.at-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.at-close {
+  width: 44px; height: 44px;
+  min-width: 44px; min-height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.at-close:hover  { background: rgba(255,255,255,0.14); }
+.at-close:active { opacity: 0.7; }
+
+/* Scrollable body */
+.at-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 20px 20px;
+  min-height: 0;           /* required for flex children to scroll */
+}
+
+.at-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.at-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.01em;
+}
+
+/* 16px to prevent iOS zoom on focus */
+.at-input,
+.at-select {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  padding: 12px 14px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.at-input:focus,
+.at-select:focus {
+  outline: none;
+  border-color: var(--accent, #4a90d9);
+  background: rgba(255,255,255,0.07);
+}
+.at-select { padding-right: 36px; }
+
+.at-error {
+  font-size: 13px;
+  color: var(--danger, #ff3b30);
+  margin: 0;
+  line-height: 1.35;
+}
+
+/* Frequency segmented grid */
+.at-freq-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.at-freq-btn {
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.at-freq-btn--active {
+  background: var(--accent, #4a90d9);
+  border-color: var(--accent, #4a90d9);
+  color: #fff;
+  font-weight: 600;
+}
+.at-freq-btn:hover:not(.at-freq-btn--active) { background: rgba(255,255,255,0.10); }
+.at-freq-btn:active { opacity: 0.75; }
+
+.at-freq-custom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.at-input--narrow { width: 100px; }
+.at-freq-unit {
+  font-size: 15px;
+  color: var(--text-2);
+}
+
+/* Submit / Cancel */
+.at-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.at-submit {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent, #4a90d9);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.at-submit:hover  { filter: brightness(1.1); }
+.at-submit:active { opacity: 0.85; }
+.at-submit:disabled {
+  cursor: wait;
+  opacity: 0.55;
+  filter: none;
+}
+
+.at-cancel-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.at-cancel-btn:active { opacity: 0.7; }
+
+.at-form-error {
+  font-size: 14px;
+  color: var(--danger, #ff3b30);
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+.cr-copy {
+  margin: 0 0 18px;
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1.45;
+}
+

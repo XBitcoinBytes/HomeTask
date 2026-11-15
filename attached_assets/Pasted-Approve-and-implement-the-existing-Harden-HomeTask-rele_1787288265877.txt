@@ -1,0 +1,67 @@
+Approve and implement the existing “Harden HomeTask release delivery” task. Do not create another task.
+
+If task activation or assignment fails, stop immediately without editing, building, testing, or publishing.
+
+Implement only these bounded repairs:
+
+1. Service-worker asset paths
+   - Update `artifacts/home-tasks/public/sw.js`.
+   - Extract and preserve the complete generated JS and CSS paths, including `/`, `./`, or a base prefix such as `/home-tasks/`.
+   - Fetch and cache exactly those paths.
+   - Retain the existing requirement for exactly one main hashed JS asset and one main hashed CSS asset.
+   - Missing or ambiguous references must still reject installation atomically and remove the incomplete cache.
+   - Do not hard-code the current hashes or `/home-tasks/`.
+
+2. F1 release identity
+   - Replace `v21-repository-test` with `v22-f1` in applicable source, visible build text, service-worker identity, tests, and comments.
+   - Use `hometask-v22-f1` as the service-worker cache name.
+   - Preserve the existing safe cache-upgrade behavior.
+   - Do not change backup formats, storage keys, migrations, or v2 behavior.
+   - Do not edit generated distribution files manually.
+
+3. Contrast
+   - Raise `--text-3` to a muted color that measures at least 4.5:1 against the worst relevant active graphite surface, including `--g2`.
+   - Keep `--text-4` reserved for genuinely disabled or decorative content.
+   - Reassign active functional uses of `--text-4`, including the home chevron, search-result room control, and custom-task delete control, to an accessible functional token.
+   - Verify normal text at 4.5:1 and essential control icons at 3:1.
+   - Preserve the graphite design and avoid unrelated restyling.
+
+4. Focused tests
+   - Update `sw-install.test.mjs` to cover rooted and base-prefixed asset paths, exact cache keys, atomic failure for missing/ambiguous assets, and the new cache identity.
+   - Add the proposed bounded `release-hardening.test.mjs`.
+   - Register it in `tests/run-all.mjs`.
+   - The new suite must check release-identifier consistency, production asset structure, absence of development markers/source-map references, and the required contrast thresholds.
+
+Security-header boundary:
+
+- Do not modify `.replit`.
+- Record the proposed headers as a deployment checklist only.
+- State explicitly that response-header support must be confirmed for the chosen Autoscale/static publishing route before configuration.
+- Do not add HTML meta-tag substitutes.
+- This deferred hosting question must not block the repository repairs above.
+
+Validation sequence:
+
+1. Make the bounded source and test changes.
+2. Run syntax/static checks and the directly affected focused suites.
+3. Produce exactly one production build using the artifact’s actual production environment with `BASE_PATH="/"`.
+4. Verify that output uses rooted hashed assets, contains no Vite development client, raw source entry, development overlay, or source-map directive, and that the service worker preserves those exact paths.
+5. Run the complete regression exactly once after that build.
+6. Do not rerun the full regression to fix reporting.
+
+Stop immediately for an unexplained failure, data-path change, v2 behavior change, or remaining service-worker ambiguity.
+
+Do not publish, access live/iPhone data, or begin the physical-iPhone smoke test.
+
+Return:
+
+- Exact files changed
+- Exact chosen contrast color and measured worst-case ratios
+- Focused-test results
+- Production-build result and generated main asset paths
+- Full suite/check ledger with zero-failure confirmation
+- Confirmation that the worker caches the exact generated paths
+- Confirmation that `v22-f1` is consistent
+- Confirmation that v2 remains disabled
+- Confirmation that `.replit`, live data, and deployment were untouched
+- The deferred security-header deployment checklist

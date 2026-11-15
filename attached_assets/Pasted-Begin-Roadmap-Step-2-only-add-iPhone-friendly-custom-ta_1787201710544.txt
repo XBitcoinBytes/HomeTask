@@ -1,0 +1,73 @@
+Begin Roadmap Step 2 only: add iPhone-friendly custom task creation.
+
+Accepted baseline:
+
+- Step 1 is complete.
+- 27 suites and 1,413/1,413 checks pass.
+- v2 remains disabled.
+- Existing built-in and custom data preservation must not regress.
+- Nothing is being published in this step.
+
+Scope:
+
+Add an accessible mobile-friendly interface for creating a custom task and assigning it to any valid room, including built-in rooms.
+
+Before editing:
+
+1. Inspect the current custom-task model, repository API, F1 UI structure, validation conventions, and mobile/accessibility tests.
+2. Identify the smallest existing UI location where task creation naturally belongs.
+3. Reuse the established persistence path and custom-record contract. Do not write directly to storage.
+4. Give a concise implementation plan and proceed unless you find data-loss risk, architectural ambiguity, or required scope expansion.
+
+Required behavior:
+
+- The user can open and dismiss the creation interface without changing data.
+- The form clearly labels all fields.
+- Required values are validated before persistence.
+- Whitespace is normalized safely without silently changing meaningful content.
+- A collision-safe custom identifier is generated without conflicting with built-ins or existing custom tasks.
+- Built-in rooms and valid existing custom rooms can be selected.
+- A successful submission creates exactly one `_custom: true` task through the v1 repository.
+- The new task appears immediately and survives reload/restart and backup/restore.
+- Failed persistence keeps the form values available and presents an accessible error.
+- Duplicate submissions are prevented while a save is pending.
+- Keyboard focus is managed correctly when opening, closing, succeeding, or failing.
+- Controls and touch targets work comfortably at iPhone viewport sizes.
+- Existing built-in tasks and data remain unchanged.
+
+Do not include:
+
+- task deletion or undo
+- custom-room creation, editing, or deletion
+- v2 work or migration
+- unrelated redesign
+- publishing
+- live/iPhone data access
+- Roadmap Step 3 or later
+
+Testing:
+
+1. Add focused model, persistence, UI, mobile, accessibility, and failure-path tests for this feature.
+2. Run only the relevant focused suites first.
+3. If they pass, run the complete regression suite exactly once.
+4. Do not repeatedly rerun unchanged tests.
+
+Stop on possible data loss, an unexplained regression, ambiguous persistence behavior, or scope expansion.
+
+When finished, stop and report:
+
+- implementation summary
+- exact files changed
+- validation and identifier rules
+- mobile and accessibility evidence
+- persistence/reload and backup/restore evidence
+- failure-path evidence
+- focused-test totals
+- exact full-suite totals with zero failures
+- confirmation that Step 1 still passes
+- confirmation that v2 stayed disabled
+- confirmation that no live data was accessed
+- confirmation that nothing was published
+- remaining risks
+
+Do not begin task deletion or any later roadmap step. Wait for approval.

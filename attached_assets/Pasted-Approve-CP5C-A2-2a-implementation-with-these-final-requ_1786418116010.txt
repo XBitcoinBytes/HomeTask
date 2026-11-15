@@ -1,0 +1,54 @@
+Approve CP5C-A2.2a implementation with these final requirements:
+
+1. Preserve the neutral dependency boundary
+
+src/data/backup/v1-backup-service.js must not import SEED_TASKS, ROOMS_ORDERED, or any src/app module.
+
+Inject all required catalog information explicitly, including:
+
+- catalogTasks
+- catalogRooms or the exact room-count source needed by the v1 envelope
+
+The service may import only authority-neutral pure utilities. All stores, adapters, catalog data, clock, delivery, and file reader remain injected.
+
+2. Verify duplicate-ID behavior from production
+
+Do not assume “first duplicate wins.”
+
+Execute the real sanitizer and merge to determine whether first, last, or rejection is current behavior. Preserve and test that exact behavior unless it is unsafe. If changing it for safety, identify it explicitly as hardening and prove no existing valid backup changes behavior.
+
+3. Test security at the correct boundary
+
+readAndValidate() must strip/reject hostile fields before applyImport().
+
+Separate tests for:
+
+- raw JSON containing __proto__, constructor, unexpected catalog fields, object tags, and unknown IDs;
+- applyImport() defensively whitelisting only lastDone, doneToday, skipUntil, and tags even if a caller passes an overfilled “sanitized” object.
+
+Do not rely on Object.create() fixtures that cannot survive JSON serialization as proof of file-import safety.
+
+4. Exact export parity
+
+Freeze or stub Date for the actual production backup.js reference so exportedAt and filename are deterministic.
+
+Compare the complete exported envelope and serialized JSON bytes—not merely selected fields while skipping exportedAt.
+
+5. Exact share/download behavior
+
+Execute the real production export path to determine:
+
+- when unsupported sharing falls back to download;
+- how AbortError is handled;
+- how non-Abort share rejection is handled;
+- when lastExport is recorded.
+
+The service must match those semantics exactly. Do not automatically convert every non-Abort share failure into a download unless production already does so.
+
+6. Test isolation
+
+Because the current backup singleton has an injection guard, use one mutable reference mock or isolated module instances so differential fixtures do not require illegally replacing the injected repository.
+
+7. Remove the setService tests from A2.2a
+
+setService belongs to the future backup.js facade in A2.2b. The disconnected V1BackupService constructor should test missing

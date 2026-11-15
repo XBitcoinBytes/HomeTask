@@ -1,0 +1,196 @@
+@replit
+
+Review and finalize HomeTask’s existing workload-summary language, then make sure the current build—not the old build—is served publicly.
+
+IMPORTANT: HomeTask must remain a pure vanilla HTML, CSS, and JavaScript PWA.
+
+Do not introduce React, Preact, Vue, Svelte, Angular, Next.js, TypeScript, JSX, UI frameworks, state-management libraries, virtualization, or swipe-only controls.
+
+CURRENT STATE
+
+The current source should already contain:
+
+- Today / This Week / All Tasks segmented views
+- Today as the default for users without a saved preference
+- viewMode persistence and migration
+- Search and room filtering
+- Calm per-view subtitles
+- Smart Start onboarding
+- Existing Done, Skip, status-color, and progress behavior
+
+Do not recreate or replace these systems. Read the current source first and make only the smallest necessary changes.
+
+The latest reported summaries include:
+
+- Today: “5 due today · 12 coming up”
+- This Week: “5 due today · 3 more this week”
+- All Tasks: “126 tasks”
+
+GOAL
+
+Audit these existing summaries for accuracy, clarity, and consistency. Refine only what is missing or misleading.
+
+SUMMARY RULES
+
+Use each task’s effective due date after considering:
+
+- lastDone
+- intervalDays
+- Smart Start baseline
+- skip overrides
+- safety status
+- local calendar date
+
+Do not calculate summaries from raw seed dates.
+
+Do not count tasks completed today as overdue or due today.
+
+Use non-overlapping categories:
+
+- Overdue
+- Due today
+- Later this week: 1–7 calendar days from today
+- Unconfirmed safety checks
+- Completed today
+
+TODAY VIEW
+
+Keep the existing calm format, but include overdue tasks when applicable.
+
+Examples:
+
+- “2 overdue · 5 due today”
+- “5 due today”
+- “You’re caught up today”
+
+A smaller secondary line may say:
+
+- “12 coming up this week”
+
+If an unconfirmed safety task exists, show it separately:
+
+- “1 safety check needs confirmation”
+
+Do not combine later-this-week tasks into a statement that implies they must be completed today.
+
+THIS WEEK VIEW
+
+Use a concise format such as:
+
+- “2 overdue · 5 today · 12 later this week”
+- “5 today · 12 later this week”
+- “You’re caught up for the week”
+
+Omit categories whose count is zero.
+
+Keep unconfirmed safety checks separate.
+
+ALL TASKS VIEW
+
+Use a neutral catalog count:
+
+- “126 tasks”
+
+Do not imply all catalog tasks are due.
+
+A smaller secondary summary may show:
+
+- “5 due today · 12 later this week”
+
+FILTER CONTEXT
+
+Verify how the current summary behaves with room and task-search filters.
+
+Desired behavior:
+
+- With no room or search filter, summarize the whole home.
+- When a room is selected, summarize that room.
+- When task search is active, summarize the matching results.
+- The global “X of Y done today” progress indicator must remain based on the complete catalog and must not shrink with filters.
+
+Examples:
+
+- “Kitchen is caught up today”
+- “2 due today in Master Bathroom”
+- “No matching tasks due today”
+
+Do not announce changing summary counts to VoiceOver after every search keystroke. Meaningful changes after Done, Skip, room selection, and view selection may use the existing restrained polite live region.
+
+COPY REQUIREMENTS
+
+Remove any remaining occurrence of:
+
+- “tasks need attention”
+- “you are behind”
+- “failed”
+- “incomplete”
+
+Ordinary cleaning tasks should use calm, factual language.
+
+Only genuine safety or critical-maintenance conditions should use stronger language.
+
+PRESERVE EXISTING BEHAVIOR
+
+Do not change:
+
+- View membership rules
+- Effective due-date calculations
+- Status-color meanings
+- Done behavior
+- Skip today or Skip week
+- Smart Start scheduling
+- Search
+- Room filtering
+- Progress calculations
+- Scroll restoration
+- Saved preferences
+- Task data
+- Visual design
+- Modular vanilla architecture
+
+PUBLIC BUILD PROBLEM
+
+The current public URL:
+
+https://web-starter-kit-shipouts.replit.app/
+
+is still serving the older interface and the old JavaScript asset:
+
+/assets/index-IyGYE9gd.js
+
+The newest reported build used:
+
+index-BIvAqMoI.js
+
+After making any required summary refinements:
+
+1. Create a clean production build.
+2. Bump the service-worker cache version beyond v10 if assets changed.
+3. Ensure the active deployment serves the newly generated index and hashed JavaScript.
+4. Remove obsolete deployment caches where safe.
+5. Redeploy or clearly identify the exact manual deployment step if Replit cannot perform it automatically.
+6. Test the public HTTPS URL—not only localhost.
+
+RUNTIME VERIFICATION
+
+Verify on the hosted build:
+
+- Today, This Week, and All Tasks show the correct summaries.
+- Overdue, due-today, later-this-week, safety, and completed counts do not overlap.
+- Room and search filters produce contextual summaries.
+- Global progress remains independent of filtering.
+- Done and Skip update summaries immediately.
+- No “tasks need attention” copy remains.
+- Saved view and room preferences survive reload.
+- The public page loads the newest hashed JavaScript file.
+- A normal reload does not restore the old interface.
+- No console errors occur.
+
+Report:
+
+- What already existed and required no change.
+- What was changed.
+- The exact runtime cases tested.
+- The final JavaScript asset filename.
+- The public URL that was verified.
+- Anything that still requires a manual Replit deployment action.

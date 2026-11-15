@@ -1,0 +1,499 @@
+Perform a focused HomeTask daily-use, search, and regression-testing repair sprint.
+
+CURRENT VERIFIED PUBLIC BUILD
+
+- JavaScript: index-bij9_XDT.js
+- CSS: index-CSW1eCtM.css
+- Service worker: hometask-v18
+- 122 tasks
+- 24 rooms/zones
+
+The current public build has no JavaScript errors, but the console records:
+
+[HomeTask] Search sheet outside viewport — forced visible.
+
+IMPORTANT
+
+- Use only vanilla HTML, CSS, and JavaScript.
+- Do not add React, Vue, TypeScript, a framework, or new runtime dependencies.
+- Preserve all task data, stable IDs, intervals, completion state, skips, scheduling, colors, progress, backup, import, recovery, onboarding, and PWA behavior.
+- Preserve the new Home screen.
+- Preserve the corrected room picker.
+- Preserve the liquid-metallic visual language.
+- Preserve hashed JavaScript and CSS production assets.
+- Do not implement task editing, custom rooms, seasonal recurrence, templates, synchronization, or swipe gestures in this sprint.
+- Do not clear user storage.
+
+GOAL
+
+The primary experience must answer:
+
+“What Do I Need To Do Today?”
+
+Future tasks must remain available but should not dominate normal daily use.
+
+1. MAKE HOME AND TODAY THE PRIMARY EXPERIENCE
+
+On normal app launch:
+
+- open the Home screen
+- do not automatically restore All Tasks as the initial visible destination
+- do not render the full 122-task list visibly behind Home
+- preserve task history and preferences
+- do not rerun onboarding
+
+HomeTask in the upper-left must continue to open Home from anywhere.
+
+On Home, make Today the most prominent action:
+
+- full-width or otherwise visually dominant
+- display the accurate number requiring attention now
+- use calm language
+
+Example:
+
+“10 Tasks Need Attention Today”
+
+The count must come from one shared authoritative workload function.
+
+Define “requires attention now” as:
+
+- severely overdue
+- overdue
+- due today
+- unresolved safety tasks
+- optionally tasks completed today if they remain visible in Today
+
+Do not count future tasks.
+
+The Home count, Today header, progress indicator, and empty state must all use the same underlying calculation.
+
+Add tests preventing count disagreement.
+
+2. REORGANIZE THE HOME DIRECTIONS
+
+Recommended hierarchy:
+
+Primary:
+
+- Today
+
+Secondary:
+
+- This Week
+- Browse Rooms
+
+Less prominent:
+
+- All 122 Tasks
+- Backup & Restore
+
+Do not give All Tasks equal visual prominence to Today.
+
+The text “122 Tasks” or “All 122 Tasks” must be a real accessible button.
+
+Tapping it must open All Tasks and scroll to the top.
+
+If the total changes later, calculate the label dynamically.
+
+3. TODAY MUST EXCLUDE FUTURE TASKS
+
+Today should show only:
+
+- overdue tasks
+- due-today tasks
+- unresolved safety tasks
+- tasks completed today
+
+Do not show tasks due tomorrow or later.
+
+This behavior must compose correctly with room filtering.
+
+When a room contains tasks but none require attention today, say:
+
+“Nothing Needs Attention In This Room Today.”
+
+Provide:
+
+“View All Tasks In This Room”
+
+Do not imply the room has no tasks.
+
+4. FUTURE TASKS MUST BE INTENTIONALLY ACCESSED
+
+Future tasks remain available through:
+
+- This Week
+- Browse Rooms
+- All Tasks
+- search results
+
+Do not place the entire future catalog below Today on the same default page.
+
+Do not automatically open All Tasks after relaunch.
+
+When leaving All Tasks and returning Home, restore Home—not the enormous All Tasks scroll position.
+
+5. CAPITALIZE SKIP LABELS
+
+Change visible labels everywhere to:
+
+- Skip Today
+- Skip Week
+
+Update:
+
+- rendered button text
+- templates
+- empty/loading variants
+- tests
+- any corresponding accessible descriptions where appropriate
+
+Do not change Skip scheduling logic.
+
+6. SHOW SKIP ONLY WHEN ACTIONABLE
+
+Display Skip Today and Skip Week only when the task currently requires attention:
+
+- due today
+- overdue
+- severely overdue
+- unresolved safety task
+
+Hide both Skip controls for:
+
+- future tasks
+- tasks due later this week
+- tasks completed today
+
+Hidden controls must be removed from keyboard and VoiceOver navigation—not merely made transparent.
+
+The neutral Done button may remain available for future tasks so a user can record early completion.
+
+When a task becomes due, both Skip controls should appear automatically.
+
+When Skip moves it into the future, the card should leave Today and the Skip controls should disappear.
+
+7. REBUILD SEARCH USING THE WORKING ROOM-PICKER PATTERN
+
+The Search sheet currently produces:
+
+[HomeTask] Search sheet outside viewport — forced visible.
+
+Replace its positioning and animation architecture with the corrected room-picker approach.
+
+Requirements:
+
+- never transform or animate the native dialog itself
+- keep the dialog as a stable bottom-anchored clip container
+- animate only the inner Search sheet
+- use max-height progressive fallbacks:
+  - vh
+  - svh
+  - dvh
+- do not use height: 100% inside a dialog without an explicit parent height
+- use flex: 1 and min-height: 0 for the results region
+- use the double-requestAnimationFrame layout check where necessary
+- default to a visible state if animation or measurement fails
+- do not rely on the safety warning during normal operation
+
+The Search heading, Close button, and input must always remain inside the visible iPhone viewport.
+
+Test after scrolling to the middle and bottom of All Tasks before opening Search.
+
+8. LOCK BACKGROUND SCROLL
+
+When Search, Browse Rooms, Backup, onboarding, or another modal sheet is open:
+
+- the underlying document must not scroll
+- only the designated sheet-results region may scroll
+- preserve the document’s exact prior scroll position
+- restore it when the sheet closes
+- prevent iOS rubber-band scrolling from moving the background
+- use overscroll-behavior where supported
+- handle Safari carefully if body position: fixed is needed
+- do not jump to the top when closing
+
+There must never be two simultaneous vertical scrollbars.
+
+When Search is open above All Tasks, the 122-task document must remain stationary.
+
+9. FIX SEARCH CLEARING
+
+The search field must remain controlled by one authoritative query state.
+
+Typing, backspacing, selecting all and deleting, tapping Clear, and closing/reopening must behave consistently.
+
+When the final character is deleted:
+
+- query becomes an empty string
+- results immediately return to the empty-search suggestion view
+- the sheet remains visible
+- the backdrop remains correct
+- the page must not go blank or dark
+- scrolling must reset to the top of the Search results region
+- the input must retain focus
+- no stale “Kitchen” value may reappear
+
+Do not retain stale element references across rerenders.
+
+Use event.currentTarget.value or another safe current-value mechanism.
+
+Add tests for:
+
+- typing Kitchen
+- deleting one character at a time
+- deleting the final character
+- select-all and delete
+- Clear button
+- closing and reopening
+- composition/input events where supported
+
+10. REMOVE THE BROKEN SEARCH DECORATION
+
+Remove the green left-parenthesis-like symbol that appears immediately before the flashing insertion cursor.
+
+Use one proper inline SVG magnifying-glass icon.
+
+The icon must:
+
+- not overlap the cursor
+- not be clipped into a partial circle
+- remain decorative and aria-hidden inside the labeled input
+- disappear or remain stationary without interfering with text entry
+- work at large text sizes
+
+Retain the normal green text cursor.
+
+11. ADD RECENT AND COMMON SEARCHES
+
+When Search opens with an empty query, show:
+
+Recent Searches
+
+- maximum five
+- newest first
+- case-insensitive deduplication
+- local to this device
+- removable through Clear Recent Searches
+- do not save empty queries
+- do not save a query until the user selects a result or explicitly submits it
+
+Also show useful suggestions derived from actual data:
+
+- Kitchen
+- Bathrooms
+- Bedrooms
+- Safety Tasks
+- Overdue Tasks
+- Clean Windows
+
+Do not display a suggestion that returns no results.
+
+“Bathroom” and “bath” should both find the bathroom-related zones.
+
+12. MAKE SEARCH RESULTS ACTIONABLE
+
+Each task search result must be a real button or link.
+
+Accessible name example:
+
+“Open Clean Microwave In Kitchen”
+
+Selecting a result must:
+
+- close Search
+- switch to an appropriate task view
+- select the correct room
+- reveal the task
+- scroll it into view
+- briefly apply a restrained visual highlight
+- preserve task data
+- not mark it Done
+- not change its due date
+
+Room results must also be actionable.
+
+Selecting Kitchen should open Kitchen and show its tasks.
+
+Do not render actionable results as generic, untappable text.
+
+13. CONTAIN SEARCH SCROLLING
+
+Search must have:
+
+- fixed heading
+- fixed Close button
+- fixed search field
+- one scrollable results region
+- safe-area-aware bottom padding
+- no document-height expansion
+- no blank scroll region
+- no scrolling hundreds of screens beyond the results
+- correct behavior when the iPhone keyboard opens and closes
+
+The Search sheet’s results scroll position should return to the top when:
+
+- query changes materially
+- Clear is used
+- a recent search is selected
+
+14. HEADER COUNT BEHAVIOR
+
+Make the total-task count interactive.
+
+When the header displays:
+
+“122 Tasks”
+
+it must be an accessible button labeled:
+
+“View All 122 Tasks”
+
+Tapping it must:
+
+- close any transient sheet
+- switch to All Tasks
+- clear transient search
+- reset room filter to All Rooms unless preserving the filter is explicitly indicated
+- scroll to the top
+
+In Today, prefer showing the actionable count as the main header information:
+
+“10 Need Attention Today”
+
+A smaller secondary control may say:
+
+“122 Total Tasks”
+
+Do not make the user interpret the total catalog size as today’s workload.
+
+15. RETAIN PROMINENT ROOM HEADINGS
+
+Preserve or improve the newer room headings.
+
+When a single room is selected:
+
+- show the room name prominently near the top
+- approximately 24px
+- strong contrast
+- Title Case
+- associated visible-task count
+- calm empty-state explanation
+- View All Tasks In This Room when appropriate
+
+Do not return to tiny all-capital room labels.
+
+16. ADD A SMALL BUILD IDENTIFIER
+
+Inside Backup & Restore, add a quiet non-interactive build identifier such as:
+
+“Build v19”
+
+or the actual current service-worker/build version.
+
+Purpose:
+
+- help physical-iPhone testers confirm an update was installed
+- prevent testing stale deployments
+
+Keep it visually secondary and accessible.
+
+Do not place it on the main task screen.
+
+17. ADD DEVELOPMENT-ONLY ATOMIC-IMPORT REGRESSION TESTS
+
+Add the previously approved automated Backup & Restore regression suite.
+
+Tests must:
+
+- not run in the production bundle
+- not run at normal app startup
+- not touch real user localStorage
+- use mock or injected storage
+- use deterministic failure injection
+- exit nonzero on failure
+
+Cover:
+
+- valid round-trip export/import
+- validation before writes
+- Undo snapshot creation and verification
+- staging write and readback
+- first final-key failure
+- later final-key failure
+- successful rollback
+- rollback failure retaining staging and snapshot
+- rollback_failed startup recovery
+- bounded recovery retry
+- abandoned staged transaction
+- abandoned committing transaction
+- committed cleanup without rollback
+- null snapshot values removing keys
+- unrelated keys untouched
+- quota-exceeded behavior
+- malformed task storage
+- malformed preference storage
+- raw recovery preservation
+- 250 KB truncation
+- older snapshot migration
+- unsupported schema
+- unknown and retired task IDs
+
+Add one documented command that runs the complete suite.
+
+18. REQUIRED RUNTIME TESTS
+
+Test at 390×844 and with WebKit where available:
+
+- normal launch opens Home
+- Today is the primary Home action
+- Home and Today counts agree
+- Today contains no future tasks
+- All Tasks remains accessible
+- 122 Tasks control opens All Tasks
+- Skip Today and Skip Week are capitalized
+- Skip controls appear on due and overdue tasks
+- Skip controls are absent from future and done-today tasks
+- Search opens within viewport at page top
+- Search opens within viewport after deep All Tasks scrolling
+- background cannot scroll while Search is open
+- only Search results scroll
+- Kitchen search works
+- clearing Kitchen one character at a time works
+- deleting the final character does not darken or blank the interface
+- recent searches work
+- search results are actionable
+- room picker still works
+- Backup & Restore still works
+- no blank-space scrolling
+- no horizontal overflow
+- all active controls are at least 44×44px
+- no JavaScript errors
+- no “Search sheet outside viewport” warnings during normal operation
+
+Physical-iPhone testing is still required after automated testing.
+
+19. BUILD AND DEPLOY
+
+After all tests pass:
+
+- increment the service-worker version beyond hometask-v18
+- retain hashed JavaScript and CSS assets
+- deploy publicly
+- verify the actual public URL
+- verify the first-load update path
+- report:
+  - public URL
+  - JavaScript asset
+  - CSS asset
+  - service-worker/build version
+  - final task count
+  - final room count
+  - automated test count
+  - exact test command
+  - individual test results
+  - physical-iPhone retest instructions
+  - known limitations
+
+Do not add task editing, seasonal recurrence, template libraries, swipe gestures, synchronization, or broad visual redesign in this sprint.

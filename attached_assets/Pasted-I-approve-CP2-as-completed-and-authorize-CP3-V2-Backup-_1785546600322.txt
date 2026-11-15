@@ -1,0 +1,286 @@
+I approve CP2 as completed and authorize CP3—V2 Backup, Import, Recovery, Rollback, Failure Injection, and Data-Loss Tripwire.
+
+This approval applies to CP3 only.
+
+CP2 is accepted based on:
+
+- 105/105 automated assertions
+- 30/30 Playwright scenarios
+- Preserved module bodies and initialization order
+- Import-order regression protection
+- Identical storage keys and transactional ordering
+- No runtime connection to src/v2
+- No production, service-worker, or build changes
+
+CP3 objective:
+
+Build and fully test the v2-compatible backup/import/recovery foundation before v2 becomes the active storage format.
+
+The running application must continue using v1 storage throughout CP3.
+
+1. No Runtime Activation
+
+During CP3:
+
+- Do not activate hometask-v2 as live application storage.
+- Do not migrate real browser data.
+- Do not connect src/v2 modules to the production entry point.
+- Do not expose v2 import through the current user interface.
+- Do not change current Backup & Restore behavior.
+- Do not modify the service worker or public build identifier.
+- Do not publish.
+
+All new v2 transactional code must operate through pure functions, injected storage adapters, isolated mock storage, or staging fixtures.
+
+2. Define the V2 Backup Envelope Exactly
+
+Before implementation, document the exact v2 backup envelope.
+
+It must include only portable user-owned data required to reconstruct the user’s HomeTask state:
+
+- schemaVersion and application identifier
+- export timestamp
+- catalog version
+- task scheduling/completion state
+- exact preferences approved for backup
+- recent searches only if intentionally portable
+- user-created zones
+- user-created tasks
+- sparse seed-task and seed-zone overrides
+- retained state associated with retired/tombstoned seed records
+- future-compatible recurrence definitions
+
+It must not duplicate the active seed catalog.
+
+It must not export:
+
+- Import staging transactions
+- Undo snapshots
+- Recovery/quarantine raw data
+- Temporary migration keys
+- Internal transaction progress
+- Unrelated localStorage data
+
+Explain every included and excluded field.
+
+3. V1 and V2 Compatibility
+
+The design must support:
+
+- Importing an existing schema-v1 HomeTask backup into the future v2 system through the approved pure migration path
+- Exporting and reimporting a v2 backup without semantic loss
+- Rejecting unsupported future schema versions calmly
+- Never converting a genuinely v2-only backup into v1 if doing so would lose custom zones, custom tasks, overrides, tombstone state, or non-v1 recurrence data
+
+Because the running app still writes v1, v2 import must remain disconnected from the current production UI during CP3.
+
+4. Strict Validation and Sanitization
+
+Validate the complete envelope before any write.
+
+Cover:
+
+- Correct application identifier
+- Supported schema version
+- Exact top-level structure
+- Required fields and exact types
+- Duplicate task and zone IDs
+- Invalid references between tasks and zones
+- Invalid or unsupported recurrence objects
+- Invalid dates, including impossible calendar dates
+- Excessive string, array, tag, and collection sizes
+- Unknown fields
+- Prototype-pollution keys
+- Unknown seed IDs
+- Retired seed IDs
+- Missing catalog versions
+- Malformed JSON
+- Empty and partially valid backups
+- User-entered Title Case normalization policy without altering identifiers or history
+
+Unknown or invalid records must never be silently discarded. Define whether each case rejects the complete import, is quarantined, or is repaired with an explicit report.
+
+5. Import Size Protection
+
+Verify and preserve the current 2 MB pre-read limit.
+
+Tests must prove:
+
+- File size is rejected before File.text() or equivalent full read.
+- Oversized content cannot reach JSON.parse().
+- Every import entry path uses the same guard.
+- Recovery-data download is not treated as an importable backup.
+- Boundary values immediately below, at, and above the limit behave as specified.
+
+6. Transaction Model
+
+Implement through an injected storage adapter with an explicit transaction state machine:
+
+- Validate entirely in memory
+- Save and verify the pre-import snapshot
+- Write and verify staging
+- Transition to committing
+- Commit only the approved HomeTask keys
+- Verify every committed byte/string
+- Record progress safely
+- Transition to committed
+- Remove staging only after verification
+
+No unrelated storage key may be read destructively, changed, or removed.
+
+Define startup behavior for staging records found in:
+
+- staged
+- committing with no keys written
+- committing with some keys written
+- committing with all keys written but not marked committed
+- committed but not cleaned up
+- malformed transaction state
+- unsupported transaction version
+
+7. Failure-Injection Matrix
+
+Use a deterministic injected storage adapter capable of failing a selected operation.
+
+Test at minimum:
+
+- Snapshot read failure
+- Snapshot write failure
+- Snapshot verification failure
+- Staging write failure
+- Staging verification failure
+- Quota exhaustion before commit
+- First live-key write failure
+- Every later live-key write position
+- Commit verification mismatch
+- Transaction-progress update failure
+- Rollback first-write failure
+- Rollback later-write failure
+- Rollback verification failure
+- Staging cleanup failure
+- Recovery-data preservation failure
+- Interrupted staged transaction
+- Interrupted partial commit
+- Interrupted complete-but-unmarked commit
+- Leftover committed transaction
+- Storage returning null unexpectedly
+- Storage throwing on read, write, and remove
+
+For every injected failure, assert:
+
+- The expected recovery state
+- Whether live data remains byte-identical
+- Whether rollback succeeds
+- Whether the snapshot is retained
+- Whether staging is retained
+- Whether the application could safely continue
+- Whether a calm user-facing diagnostic can eventually be produced
+- Unrelated keys remain byte-identical
+
+Do not merely assert that an exception was thrown.
+
+8. Rollback-Failure Policy
+
+If rollback cannot be verified:
+
+- Never claim the rollback succeeded.
+- Preserve the snapshot.
+- Preserve sufficient staging/transaction evidence.
+- Mark the transaction with an explicit rollback_failed state.
+- Do not repeatedly overwrite the best-known recovery evidence on future startups.
+- Produce a structured diagnostic suitable for the future Backup & Restore UI.
+- Keep recovery attempts idempotent.
+
+Test repeated startups after rollback_failed.
+
+9. Data-Loss Tripwire
+
+Implement the pending silent-data-loss regression goal as a deterministic automated suite.
+
+At minimum:
+
+- Start with rich v1 fixtures.
+- Construct a backup.
+- Import/migrate into the v2 model.
+- Export v2.
+- Reimport into an empty store.
+- Compose with the same catalog.
+- Run assertEquivalent() across all preserved fields and behaviors.
+- Confirm all custom definitions, overrides, preferences, tags, tombstone state, completion state, skip state, and recurrence survive.
+- Confirm unrelated keys remain untouched.
+
+Also inject one deliberate field-loss defect and prove the tripwire fails.
+
+10. Snapshot and Recovery Boundaries
+
+Preserve the established distinction:
+
+- Backup: intentionally portable user data
+- Undo snapshot: byte-exact pre-operation HomeTask storage
+- Import staging: temporary transaction data
+- Recovery record: damaged-data evidence
+- Catalog: static application source
+
+Do not merge these concepts into one general-purpose blob.
+
+Preserve the existing 250 KB raw recovery-data cap and its non-overwrite policy. Test truncation metadata and storage-full behavior.
+
+11. Security Tests
+
+Include crafted payloads for:
+
+- __proto__
+- constructor
+- prototype
+- HTML/script content in user titles and tags
+- Extremely deep or wide objects
+- Duplicate IDs with conflicting definitions
+- References to nonexistent zones
+- Attempts to overwrite catalog-authoritative safety
+- Attempts to inject seed catalog fields through overrides
+
+Validation must produce plain structured errors without executing or rendering imported content.
+
+12. Existing Behavior Must Remain Green
+
+At completion rerun:
+
+- Existing backup suite
+- Workload suite
+- V2 suite
+- Import-order suite
+- New CP3 suites
+- Existing Playwright smoke matrix
+
+No existing assertion may be removed, weakened, skipped, or rewritten merely to make CP3 pass.
+
+13. Completion Report
+
+At the end of CP3, provide:
+
+- Exact files added or changed
+- V2 backup-envelope schema
+- Included/excluded field table
+- Transaction-state diagram
+- Storage-adapter interface
+- Complete validation policy
+- Failure-injection matrix with individual results
+- Data-loss-tripwire results
+- Deliberate-defect proof
+- V1-backup compatibility results
+- V2 round-trip results
+- Snapshot/rollback/recovery results
+- Exact test totals by suite
+- Confirmation that v1 remains the active runtime format
+- Confirmation that src/v2 remains disconnected from production runtime
+- Confirmation that public/, dist/, SW v19, and production remain unchanged
+- Any unresolved risks or physical-iPhone-only checks
+- Git/diff summary
+
+Do not create suggested Replit project tasks.
+
+Stop after CP3 and ask:
+
+“Do you approve CP3 as completed and authorize CP4 Shadow Migration, or would you like corrections first?”
+
+You may now begin CP3 under these constraints.

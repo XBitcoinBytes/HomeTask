@@ -1,0 +1,52 @@
+Revise the CP5C-A2.1 plan only. Do not implement.
+
+Correct these issues:
+
+1. Use the real entry path: src/script.js, not src/v2/script.js.
+
+2. Quote the exact current V1Repository constructor and createV1StorageAdapter signatures. Do not double-wrap an adapter. State precisely whether V1Repository receives raw backing or an already-created adapter.
+
+3. Quote the exact catalog argument shape expected by V1Repository. Do not alternate between SEED_TASKS and { tasks, zones }.
+
+4. Import recoveryStore from its actual defining/exporting module. Verify the path from source.
+
+5. Include ui.js and onboarding.js:
+- inventory their meta calls;
+- define exactly how the injected repository reaches them;
+- include them in the file-change list and tests.
+No ordinary-domain meta import may remain accidentally.
+
+6. Preserve task API contracts:
+List the current return value of getAll(), markDone(), skipToday(), skipWeek(), and applyBaseline(), plus how every caller uses it.
+
+Do not replace a returned task/value with {ok,error} if callers depend on the old value. Define a compatible failure result or update and test every caller explicitly.
+
+7. Use copy-on-write for tasks:
+- construct nextItems without mutating _items;
+- persist nextItems;
+- assign _items = nextItems only after success;
+- on failure, keep the original _items reference and contents unchanged.
+
+This must cover markDone, both Skip actions, and applyBaseline across all affected tasks.
+
+8. Handle preference failures correctly:
+_viewMode and _roomFilter are in-memory preference state. Do not change them permanently when savePrefs fails. Define save-before-commit or explicit rollback for each call site, including onboarding.
+
+9. Tighten structural guards:
+- forbid literal localStorage in every app module except exact low-level transaction/storage files;
+- allow exact import pairs rather than exempting all content in backup.js;
+- prove backup.js may retain only the legacy imports required by _buildEnvelope/applyImport.
+
+10. Repository location:
+Recommend moving authority-neutral files from src/v2/repository/ to src/data/repository/ before wiring. Include exact move/import updates and cost. Prefer the neutral location unless source constraints prove otherwise.
+
+11. Provide the missing:
+- complete changed-file list;
+- dependency graph;
+- unit/integration/failure tests;
+- exact 390×844 browser smoke covering onboarding, Done, both Skip actions, views, room picker, search, backup date, reload, and storage-failure simulation;
+- risks;
+- rollback procedure;
+- expected test arithmetic from the 718 baseline.
+
+Keep V2_ACTIVATION_ENABLED=false. No code, build, publish, backup-transaction changes, v2 repository, or activation. Stop for approval.

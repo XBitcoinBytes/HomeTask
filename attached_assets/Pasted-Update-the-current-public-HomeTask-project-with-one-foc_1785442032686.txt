@@ -1,0 +1,75 @@
+Update the current public HomeTask project with one focused catalog-cleanup and naming-quality pass.
+
+IMPORTANT CONSTRAINTS
+
+- Use only vanilla HTML, CSS, and JavaScript.
+- Do not add React, Vue, TypeScript, a framework, or new dependencies.
+- Preserve all existing functionality:
+  - Today / This Week / All Tasks views
+  - Smart Start scheduling
+  - status colors
+  - Done behavior
+  - Skip behavior
+  - search
+  - room filtering
+  - progress tracking
+  - saved preferences
+  - localStorage compatibility
+  - PWA and service-worker behavior
+- Do not redesign the interface.
+- Do not change task intervals unless correcting a clearly documented catalog error.
+- Do not change existing task IDs merely because a title is being corrected. Existing completion and scheduling history must remain attached to the same tasks.
+
+1. FIX THE FRESH-START HEADER BUG
+
+Before the user completes Smart Start onboarding, the header currently says “126 safety checks.” This is incorrect because only one catalog item is a safety task.
+
+Replace it with calm, accurate language such as:
+
+“126 tasks ready to schedule”
+
+The number must be calculated from the actual catalog rather than hard-coded.
+
+After onboarding, preserve the current per-view summaries:
+
+- Today: safety count and tasks due today
+- This Week: safety count, tasks due today, and tasks due later this week
+- All Tasks: total task count
+
+Use correct singular/plural wording for “task/tasks” and “safety check/safety checks.”
+
+2. REMOVE BATHROOM PARENT/SUBTASK DUPLICATION
+
+Remove the generic “Whole Bathroom Done” task from:
+
+- Master Bathroom
+- Half Bath
+- Madi Bath
+- Basement Bath
+
+These tasks duplicate the individual bathroom tasks and make progress ambiguous.
+
+Keep all individual bathroom tasks and their existing intervals intact, including:
+
+- Clean Mirror
+- Clean Floor
+- Clean Toilet
+- Clean Sink
+- Clean Trash
+- Refill Toilet Paper
+- Refill Kleenex
+- Clean Door Knob
+- Cobweb Removal
+
+Retire the four “Whole Bathroom Done” entries safely. Ensure old saved copies of those retired tasks do not reappear after reload, service-worker update, or localStorage migration.
+
+Do not create parent/subtask logic in this pass.
+
+3. ESTABLISH A TASK-NAMING POLICY
+
+All task titles must use Title Case: capitalize the first letter of every word.
+
+Examples:
+
+- “Clean baseboards” → “Clean Baseboards”
+- “Take out garbage” → “Take Out Garbage

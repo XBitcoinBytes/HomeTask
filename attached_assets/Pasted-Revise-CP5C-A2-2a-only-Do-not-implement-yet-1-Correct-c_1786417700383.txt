@@ -1,0 +1,82 @@
+Revise CP5C-A2.2a only. Do not implement yet.
+
+1. Correct catalog-authoritative import merging
+
+Never spread an imported record over a seed record.
+
+Build each task from the seed and explicitly whitelist only:
+
+- lastDone
+- doneToday
+- skipUntil
+- tags
+
+Quote the exact current production merge and preserve it. Add hostile-import tests proving title, room, intervalDays, safety, IDs, and prototype fields cannot override the catalog.
+
+2. Make the Backup UI genuinely authority-neutral
+
+The plan still leaves backup-ui.js directly reading v1 stagingStore and recoveryStore. That would require UI changes when v2 becomes authoritative.
+
+Define one backup-service contract covering:
+
+- export
+- file validation
+- import
+- undo
+- last-export date
+- snapshot availability
+- interrupted-import/recovery notice state
+- recovery-data download
+- recovery dismissal
+
+CP4 shadow/Upgrade Check may remain a separate diagnostic dependency, but no v1 staging/recovery store should be imported directly by Backup UI after A2.2b.
+
+3. Choose one coherent wiring pattern
+
+Recommended:
+
+- backup.js becomes a thin authority-neutral facade.
+- app/bootstrap injects V1BackupService into backup.setService().
+- backup-ui.js continues calling backup.* through the facade.
+- future V2BackupService is swapped at bootstrap without changing Backup UI.
+
+Do not both inject the service directly into Backup UI and retain an unused backup.js stub.
+
+4. Isolate browser capabilities
+
+V1BackupService must not hard-code navigator.share, document, URL, FileReader, timers, or location.reload in its transaction core.
+
+Inject or separate:
+
+- file reader
+- export/share/download delivery
+- clock
+- reload scheduler
+
+This permits deterministic Node tests and keeps reload under UI control only after verified success.
+
+5. Differential verification
+
+A2.2a tests must execute the actual current backup.js implementation and the disconnected V1BackupService against identical fixtures with fixed clock/browser adapters.
+
+Compare:
+
+- exported object and serialized bytes
+- validation/sanitization output
+- imported task/prefs bytes
+- staging transitions
+- rollback bytes
+- Undo behavior
+- malformed/oversized failures
+
+Do not use a handwritten reference implementation.
+
+6. Location
+
+Place authority-specific service code under a neutral data boundary, such as:
+
+src/data/backup/v1-backup-service.js
+
+not src/app/, unless a concrete dependency requires otherwise.
+
+Return the corrected A2.2a interface, exact files, differential-test method, and revised A2.2b wiring diagram. Keep A2.2a disconnected. No code, build, publish, activation, or A2.2b work.

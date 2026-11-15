@@ -1,0 +1,326 @@
+Perform a focused HomeTask navigation, search, catalog-clarity, and regression-testing sprint.
+
+Do not add seasonal recurrence, custom task editing, custom rooms, task-template libraries, or swipe gestures in this pass. Those are approved for the immediately following editing sprint.
+
+IMPORTANT
+
+- Use only vanilla HTML, CSS, and JavaScript.
+- Do not use React, Vue, TypeScript, a framework, or new runtime dependencies.
+- Preserve all existing Done, Skip, scheduling, status colors, views, room filtering, progress, Smart Start, backup, import, recovery, persistence, PWA, and service-worker behavior.
+- Preserve the current liquid-metallic visual direction.
+- Preserve content-hashed JavaScript and CSS production assets.
+- Do not clear or broadly rewrite user storage.
+- Preserve stable task IDs and saved task history.
+- All task and zone names must continue to follow the existing Title Case normalization policy.
+- Do not implement custom swipe behavior in this sprint.
+
+1. ADD A SAFE HOME SCREEN
+
+Make the “HomeTask” brand in the upper-left a real button or link with the accessible name:
+
+“Go to HomeTask Home”
+
+Clicking it must always take the user to a clean, calm Home screen.
+
+The Home screen should function like a simple front sign. It should not show the complete task list.
+
+Include large, understandable directions:
+
+- Today
+- This Week
+- Browse Rooms
+- All Tasks
+- Backup & Restore
+
+Also show a calm workload summary such as:
+
+“5 tasks due today”
+
+The Home screen must:
+
+- close any open dialog
+- close search
+- scroll to the top
+- clear transient search results
+- provide an obvious safe place when the user feels lost
+- never change completion history, skips, due dates, or task data
+- never trigger onboarding again
+- retain existing saved task state
+
+The HomeTask control must have a minimum 44×44px touch target even if the visible text is smaller.
+
+Give it a visible pressed and keyboard-focus state without making it look like a conventional rectangular button.
+
+Decide and document whether a fresh normal launch opens Home or Today. Recommended behavior:
+
+- first launch after onboarding → Home
+- later launches → restore the user’s most recent main destination
+- tapping HomeTask always → Home
+
+2. COMPACT SEARCH CONTROL
+
+The full-width search bar currently consumes too much permanent space.
+
+Replace its resting state with a compact 44×44px magnifying-glass button.
+
+Tapping the icon should open a dedicated Search sheet or expandable search panel.
+
+Use a proper inline SVG magnifying-glass icon. Remove the broken green left-parenthesis-like shape currently appearing beside the cursor.
+
+The active search field may retain the green flashing insertion cursor.
+
+The search interface must include:
+
+- a clear Search heading
+- a text field
+- a Clear button when text exists
+- a Close button
+- recent searches
+- useful suggestions before typing
+- grouped results
+- a calm empty state
+
+Do not leave the large search input permanently visible in the normal task interface.
+
+3. FIX SEARCH SCOPE
+
+Search must work across the complete active task and room catalog, regardless of whether the user was previously viewing Today, This Week, or a filtered room.
+
+Searching must match:
+
+- task title
+- room or zone name
+- relevant task tags
+- relevant room category or aliases
+
+Search must be case-insensitive and whitespace-normalized.
+
+Required examples:
+
+- “Kitchen” finds the Kitchen and its tasks.
+- “bathroom” finds Master Bathroom and other bathroom-type rooms.
+- “bath” finds Master Bathroom, Half Bath, Madi Bath, and Basement Bath.
+- “baseboards” finds every Clean Baseboards task.
+- “smoke” finds Check Smoke Detector Batteries.
+- “water softener” finds Check Water Softener.
+
+Add a small alias system so semantically equivalent searches work:
+
+- bath ↔ bathroom
+- office ↔ study, where appropriate
+- trash ↔ garbage
+- couch ↔ sofa
+
+Do not use fuzzy matching so broad that unrelated results appear.
+
+Search results should be grouped by room and show each task’s current status.
+
+Selecting a result should open or reveal that task in its room without losing the user’s saved task data.
+
+Closing Search should return to the previous Home, Today, Week, All Tasks, or room context.
+
+4. RECENT AND SUGGESTED SEARCHES
+
+When Search opens with an empty field, show:
+
+Recent Searches
+
+- retain at most five
+- store locally only
+- deduplicate case-insensitively
+- put the newest first
+- allow recent searches to be cleared
+- do not save empty or unsuccessful accidental searches
+
+Also show useful suggestions derived from actual data, such as:
+
+- Kitchen
+- Bathrooms
+- Bedrooms
+- Safety Tasks
+- Overdue Tasks
+- Clean Windows
+
+Do not hard-code suggestions that return no results.
+
+5. IMPROVE ROOM AND ZONE CLARITY
+
+Room and zone names are currently too small and visually recessive.
+
+Make the active room or zone name substantially more prominent:
+
+- approximately 22–26px on iPhone
+- strong readable contrast
+- normal Title Case rather than tiny all-capital lettering
+- adequate breathing room
+- associated task count or current-view count
+
+When a room is selected, show a clear heading such as:
+
+“Madi’s Room”
+
+Then distinguish these states:
+
+- “No tasks have been added to this room.”
+- “Nothing is due in this room today.”
+- “No tasks in this room match your search.”
+
+If a room has tasks but none are due in Today view, provide:
+
+“View All Tasks In This Room”
+
+Do not make the user think the room is empty when its tasks are merely outside the selected time view.
+
+Keep room headings readable for older users and large-text settings.
+
+6. AUTHORITATIVE CATALOG CORRECTIONS
+
+Make these corrections while preserving stable IDs and existing user state:
+
+- Rename “Madi Room” to “Madi’s Room.”
+- Move Check Water Softener to Utility Room.
+- Move Leather Couch Conditioning to Family Room.
+- Move Check Smoke Detector Batteries to Whole House.
+- Move Take Out Garbage to Whole House.
+- Create Family Room if it does not exist.
+- Create Whole House if it does not exist.
+- Remove Shared after every task has been reassigned.
+
+Do not duplicate tasks while moving them.
+
+Do not reset lastDone, doneToday, skipUntil, tags, or any saved scheduling state.
+
+Treat seed title, room, interval, and safety classification as authoritative while continuing to merge saved user-state fields by stable ID.
+
+Run catalog validation after the change and report:
+
+- final task count
+- final room count
+- duplicate IDs
+- duplicate room/title pairs
+- invalid intervals
+- any orphaned task state
+
+7. DO NOT ADD TASK EDITING YET
+
+This sprint should prepare the interface for the upcoming editing feature, but do not implement Add Task or Delete Task yet.
+
+Where appropriate, the interface may reserve a logical future location for an Add Task action, but do not display a nonfunctional button.
+
+The next sprint will implement:
+
+- Add Task
+- Edit Task
+- Archive or Delete Task
+- Add Room or Zone
+- Rename Room or Zone
+- Move Task
+- Seasonal recurrence
+- calendar recurrence
+- custom rooms
+- custom tasks
+- task-template suggestions
+- backup-schema migration
+
+8. DO NOT ADD SWIPE GESTURES
+
+Do not attach behavior to horizontal dragging yet.
+
+Reasons:
+
+- Safari uses edge swipes for Back navigation.
+- Horizontal task gestures can cause accidental actions.
+- Swipe-only controls are inappropriate for older users and VoiceOver users.
+- The navigation model must be validated before adding gesture shortcuts.
+
+Do not add swipe-to-delete, swipe-to-complete, or swipe-to-skip.
+
+9. ADD ATOMIC-IMPORT REGRESSION TESTS
+
+Implement the approved development-only Backup & Restore regression suite.
+
+Tests must not run in the production bundle or normal app startup.
+
+Use mock or injected storage. Do not touch real user localStorage.
+
+Cover:
+
+- valid round-trip export/import
+- import validation before writes
+- Undo snapshot creation and verification
+- staging write and readback
+- first final-key failure
+- later final-key failure
+- successful rollback
+- rollback failure retaining staging and snapshot
+- rollback_failed startup recovery
+- abandoned staged transaction
+- abandoned committing transaction
+- committed cleanup without rollback
+- null snapshot values removing keys
+- unrelated keys untouched
+- quota-exceeded behavior
+- malformed task storage
+- malformed preference storage
+- raw recovery preservation and truncation
+- older snapshot migration
+- unsupported backup schema
+- unknown and retired IDs
+
+If rollback fails:
+
+- retain staging
+- retain the Undo snapshot
+- mark rollback_failed
+- allow a bounded startup recovery retry
+- never create an infinite retry loop
+
+Add one documented test command that exits nonzero on failure.
+
+Do not add production console noise merely to run tests.
+
+10. IPHONE AND ACCESSIBILITY TESTS
+
+Test at 390×844 and with WebKit where possible:
+
+- HomeTask opens Home
+- each Home destination works
+- Search icon is 44×44px
+- no broken parenthesis-like search decoration
+- Kitchen search works
+- bathroom and bath searches work
+- recent searches work
+- room headings are prominent
+- rooms with no currently due tasks show the correct message
+- All Rooms picker still opens correctly
+- Backup & Restore still opens correctly
+- VoiceOver names are sensible
+- large text does not clip
+- reduced motion works
+- portrait and landscape
+- no horizontal overflow
+- no console errors
+
+Automated WebKit testing does not replace physical-iPhone testing.
+
+11. BUILD AND DEPLOY
+
+After all tests pass:
+
+- increment the service-worker version
+- keep hashed JavaScript and CSS assets
+- deploy publicly
+- verify the actual public URL
+- report:
+  - JavaScript asset
+  - CSS asset
+  - service-worker version
+  - final task count
+  - final room count
+  - number of regression tests
+  - exact test command
+  - individual test results
+  - public runtime results
+  - known limitations
+
+Do not add custom tasks, custom rooms, seasonal scheduling, large libraries, swipe gestures, or a broad visual redesign in this sprint.

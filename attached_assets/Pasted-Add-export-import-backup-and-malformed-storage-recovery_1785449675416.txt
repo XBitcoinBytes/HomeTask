@@ -1,0 +1,169 @@
+Add export/import backup and malformed-storage recovery to the current public HomeTask PWA.
+
+IMPORTANT CONSTRAINTS
+
+- Use only vanilla HTML, CSS, and JavaScript.
+- Do not use React, Vue, TypeScript, a framework, or external dependencies.
+- Keep HomeTask local-first. Do not add accounts, cloud storage, a backend, or synchronization.
+- Preserve all existing functionality and data:
+  - the authoritative 122-task, 23-room catalog
+  - Today / This Week / All Tasks
+  - Smart Start
+  - status colors
+  - Done and Skip behavior
+  - search and room filtering
+  - progress tracking
+  - saved preferences
+  - Title Case normalization
+  - catalog validation
+  - existing localStorage migration and field whitelisting
+  - PWA and offline support
+- Do not change task IDs, room names, intervals, safety classifications, or task titles.
+- Do not clear all localStorage as a recovery strategy.
+- Do not silently discard damaged data.
+- Keep the interface extremely simple and comfortable on an iPhone.
+
+GOAL
+
+Give users a safe way to:
+
+1. Export all HomeTask history and preferences to a versioned JSON backup.
+2. Restore HomeTask from a valid backup.
+3. Recover gracefully when saved data is malformed or partially damaged.
+4. Undo an import if the wrong backup was selected.
+
+1. BACKUP INTERFACE
+
+Add a compact, accessible “Backup” button without cluttering the main task interface.
+
+The button must have a minimum 44×44-point touch target and open a simple modal or bottom sheet titled:
+
+“Backup & Restore”
+
+Include:
+
+- Export Backup
+- Import Backup
+- a short explanation that HomeTask data is stored only on this device
+- the date of the last successful export, when available
+- an Undo Last Import option only when a recoverable pre-import snapshot exists
+- a Close button
+
+Use calm, plain language suitable for an older user.
+
+The modal must:
+
+- trap focus while open
+- close with Escape
+- close with its Close button
+- restore focus to the Backup button
+- work with VoiceOver
+- respect reduced-motion settings
+
+Do not use swipe-only controls.
+
+2. VERSIONED BACKUP FORMAT
+
+Create one centralized backup module responsible for export, validation, import, and recovery.
+
+Use a documented, versioned JSON envelope similar to:
+
+{
+  "app": "HomeTask",
+  "schemaVersion": 1,
+  "exportedAt": "ISO-8601 timestamp",
+  "catalogTaskCount": 122,
+  "catalogRoomCount": 23,
+  "taskState": [...],
+  "preferences": {...}
+}
+
+Do not depend on the catalog counts remaining 122 and 23 forever. Calculate them when exporting.
+
+Export only HomeTask-owned data. Do not export:
+
+- service-worker caches
+- unrelated localStorage keys
+- quarantined corrupt data
+- browser information
+- device information
+- secrets
+
+For task records, export only approved user-state fields associated with stable task IDs, such as:
+
+- id
+- lastDone
+- doneToday
+- skipUntil
+- tags
+- any existing legitimate completion-history fields
+
+Do not export seed-owned catalog fields as authoritative user data. The current seed catalog must remain authoritative for:
+
+- title
+- room
+- intervalDays
+- safety classification
+- catalog metadata
+
+Export the applicable HomeTask preferences, including:
+
+- selected view
+- room filter
+- onboarding state and choice
+- other legitimate existing preferences
+
+3. EXPORT BEHAVIOR
+
+When the user taps Export Backup:
+
+- generate valid, human-readable JSON
+- use the filename `HomeTask-backup-YYYY-MM-DD.json`
+- update the saved “last export” date only after successful export
+- prefer the iPhone share sheet when the browser supports sharing files
+- otherwise download the JSON file normally
+- provide a calm success message
+- provide a clear error if sharing or downloading fails
+
+The export must work offline.
+
+Do not send the backup to any server.
+
+4. IMPORT FILE SELECTION
+
+When the user taps Import Backup:
+
+- open a native file picker
+- accept JSON files only
+- enforce a reasonable maximum file size, such as 2 MB
+- read the file locally in the browser
+- do not upload it anywhere
+- do not alter current data merely because a file was selected
+
+Validate the entire backup before offering to restore it.
+
+Reject files that:
+
+- are not valid JSON
+- are not identified as a HomeTask backup
+- have a missing or invalid schemaVersion
+- use a newer unsupported schema version
+- have an invalid top-level structure
+- exceed the size limit
+- contain no recoverable HomeTask data
+
+Provide specific, calm error messages without exposing technical stack traces.
+
+5. IMPORT VALIDATION AND SANITIZATION
+
+Validate every imported record.
+
+For task state:
+
+- match tasks by stable task ID
+- preserve the current authoritative seed title, room, interval, and safety fields
+- accept only whitelisted user-state fields
+- validate dates strictly
+- validate booleans strictly
+- ensure tags are safe strings if tags are supported
+- ignore prototype

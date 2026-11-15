@@ -1,0 +1,771 @@
+Conduct a read-only, evidence-based expert review of the current HomeTask product, create a durable master product blueprint, conduct a structured panel debate and vote, and produce a gated five-step implementation roadmap.
+
+PUBLIC PRODUCT
+
+https://web-starter-kit-shipouts.replit.app/
+
+CONTEXT
+
+HomeTask is a local-first, installable iPhone PWA for recurring household tasks.
+
+It currently uses vanilla HTML, CSS, and JavaScript. It includes approximately 122 active tasks and 24 rooms or zones, plus:
+
+- Home
+- Today
+- This Week
+- All Tasks
+- room filtering
+- task and room search
+- Smart Start onboarding
+- Done
+- Skip Today
+- Skip Week
+- status colors
+- progress tracking
+- localStorage persistence
+- Title Case normalization
+- catalog validation
+- export/import backup
+- malformed-storage recovery
+- staged atomic import
+- rollback and Undo Import
+- service-worker updates
+- hashed production assets
+- native dialog-based bottom sheets
+- physical-iPhone testing
+
+The owner has only a limited number of Fable 5 sprints available. Use this review for high-value judgment, architecture, product design, security analysis, and code-ready specifications. Do not waste the response on generic advice or mechanical bulk work that a less expensive model can perform later.
+
+ROLE CLARIFICATION
+
+Simulate a multidisciplinary panel of senior experts.
+
+Three panel members should have deep senior Apple-platform, iPhone, Safari, WebKit, PWA, and Human Interface Guidelines expertise. These are simulated expert roles—not claims that the reviewers currently work for Apple or speak for Apple.
+
+INITIAL PHASE IS STRICTLY READ-ONLY
+
+Do not modify anything during the initial review.
+
+Do not:
+
+- edit files
+- create files
+- install packages
+- change project configuration
+- change task state
+- mark real tasks Done
+- Skip real tasks
+- alter localStorage
+- import or restore backups
+- trigger destructive recovery paths against real data
+- deploy
+- republish
+- accept Replit-generated task plans
+- begin implementing a roadmap step
+
+Use isolated test state, mocks, or non-destructive inspection for anything that could affect user data.
+
+After delivering the audit, debate, vote, master blueprint, and five-step roadmap, STOP and ask for explicit owner approval before implementing Step 1.
+
+PRODUCT NON-NEGOTIABLES
+
+HomeTask should remain:
+
+- vanilla HTML, CSS, and JavaScript
+- local-first
+- installable as an iPhone PWA
+- extremely simple during daily use
+- understandable to an older user
+- accessible with VoiceOver
+- usable with large text
+- compatible with Reduce Motion
+- optimized for Safari and Home Screen installation
+- safe with locally stored household history
+- visually premium, liquid-metallic, calm, and readable
+- functional offline after successful installation and initial loading
+
+Do not recommend React, Vue, Next.js, TypeScript, a backend, synchronization, accounts, push notifications, or a framework migration merely because they are common industry choices.
+
+Recommend architectural expansion only when a verified product requirement justifies it.
+
+PRIMARY PRODUCT QUESTION
+
+HomeTask’s main daily question should be:
+
+“What Do I Need To Do Today?”
+
+Powerful setup and editing features may exist, but they must not make everyday completion confusing.
+
+KNOWN OWNER FINDINGS
+
+Independently verify these findings rather than assuming they are correct:
+
+- HomeTask needs a safe Home destination.
+- Home and Today counts may disagree.
+- All Tasks can dominate the experience.
+- Future tasks are too prominent.
+- “122 Tasks” should be actionable.
+- Skip Today and Skip Week should use Title Case.
+- Skip controls should not appear on future tasks.
+- Search has produced physical-iPhone positioning problems.
+- Search can allow excessive blank-space scrolling.
+- Search can leave the background page scrollable.
+- deleting the final search character can cause a dark or broken state
+- the Search icon or decoration can resemble a broken green parenthesis
+- Search results may not be actionable
+- room names need strong hierarchy
+- users cannot yet add, edit, move, archive, or delete tasks
+- users cannot yet add, rename, archive, or delete rooms or zones
+- users need seasonal, monthly, annual, and interval-based recurrence
+- user-entered names must follow the Title Case policy
+- a future template library should make custom entry uncommon
+- the visual design is promising but does not yet fully achieve the intended premium liquid-metallic quality
+- the product should eventually be safe to share with friends and family
+- hotel or staff use is a possible future direction but may require a different multi-user architecture
+
+Do not treat every requested feature as automatically correct. Challenge anything that would undermine simplicity, accessibility, reliability, or maintainability.
+
+PANEL MEMBERS
+
+Create eight independent reviewers.
+
+1. APPLE-PLATFORM ENGINEER A — SAFARI, WEBKIT, AND PWA ARCHITECTURE
+
+Evaluate:
+
+- Safari and WebKit
+- installed Home Screen behavior
+- service workers
+- offline cold launch
+- update transitions
+- caching
+- hashed assets
+- safe areas
+- dynamic viewport
+- visual viewport
+- iPhone keyboard behavior
+- native dialog/top-layer behavior
+- portrait and landscape
+- standalone versus Safari differences
+- iPhone performance
+
+2. APPLE-PLATFORM ENGINEER B — IPHONE INTERACTION AND HUMAN INTERFACE DESIGN
+
+Evaluate:
+
+- Apple Human Interface Guidelines
+- navigation clarity
+- Home behavior
+- Today-first design
+- touch targets
+- hierarchy
+- discoverability
+- modal and bottom-sheet behavior
+- accidental actions
+- older-user usability
+- gesture appropriateness
+- whether HomeTask feels native rather than like a dark website
+
+3. APPLE-PLATFORM ENGINEER C — PERFORMANCE, RELIABILITY, AND PRODUCT ENGINEERING
+
+Evaluate:
+
+- state management
+- rendering
+- DOM size
+- scroll behavior
+- event handling
+- stale references
+- modularity
+- maintainability
+- testability
+- catalog growth
+- editing architecture
+- recurrence architecture
+- failure recovery
+- regression risk
+- whether vanilla remains appropriate
+
+4. WEB ACCESSIBILITY AND VOICEOVER SPECIALIST
+
+Evaluate:
+
+- WCAG 2.2
+- VoiceOver
+- focus order
+- focus restoration
+- dialog semantics
+- heading structure
+- landmarks
+- live regions
+- accessible names
+- status announcements
+- Dynamic Type and zoom
+- contrast
+- reduced motion
+- external keyboard
+- Switch Control
+- 44×44-point targets
+- color-independent meaning
+- empty and error states
+
+5. OLDER-ADULT UX AND COGNITIVE-ACCESSIBILITY SPECIALIST
+
+Evaluate:
+
+- cognitive load
+- simplicity
+- calm language
+- Home and Today clarity
+- recovery when lost
+- distinction between today’s workload and the complete catalog
+- room and task editing
+- accidental complexity
+- legibility
+- trust
+- self-evident interaction
+
+6. DATA-INTEGRITY, PRIVACY, AND APPLICATION-SECURITY ENGINEER
+
+Evaluate:
+
+- localStorage isolation
+- parsing
+- validation
+- backup schema
+- import sanitization
+- prototype pollution
+- HTML/script injection
+- storage exhaustion
+- staged import
+- rollback
+- rollback failure
+- interrupted-import recovery
+- corrupt-data preservation
+- Undo Import
+- unknown IDs
+- unrelated-key protection
+- silent data-loss risk
+
+7. SENIOR PRODUCT MANAGER AND HOUSEHOLD-WORKFLOW DESIGNER
+
+Evaluate:
+
+- genuine recurring value
+- daily usefulness
+- product-market potential
+- feature sequencing
+- household validation
+- seasonal scheduling
+- task and room editing
+- template libraries
+- future hotel use
+- what should be deferred
+- what would make friends and family continue using it
+
+8. SENIOR QA, TEST-AUTOMATION, AND RELEASE ENGINEER
+
+Evaluate:
+
+- deterministic tests
+- mock storage
+- failure injection
+- WebKit testing
+- physical-device gaps
+- offline tests
+- service-worker upgrades
+- public deployment verification
+- stale assets
+- release gates
+- rollback
+- reproducible bug reports
+
+INDEPENDENCE REQUIREMENT
+
+Each reviewer must independently inspect the evidence and form an opinion.
+
+Do not manufacture consensus.
+
+Clearly distinguish:
+
+- verified fact
+- observed runtime behavior
+- code-review finding
+- reasonable inference
+- unverified hypothesis
+- design preference
+
+Do not describe assumptions as test results.
+
+REQUIRED SOURCE AND RUNTIME INSPECTION
+
+Review:
+
+- current source
+- production output
+- public deployment
+- build configuration
+- manifest
+- service worker
+- production asset references
+- storage keys
+- task catalog
+- room catalog
+- status calculations
+- workload counts
+- Today/Week/All filtering
+- Done
+- Skip
+- Search
+- room filtering
+- Home navigation
+- dialog architecture
+- backup
+- import
+- recovery
+- automated tests
+- catalog validation
+- title normalization
+- console output
+- mobile layout at 390×844
+
+When consulting current platform standards, prefer and cite official:
+
+- Apple documentation
+- WebKit documentation
+- W3C
+- WCAG
+
+Distinguish official requirements from panel recommendations.
+
+NON-DESTRUCTIVE RUNTIME TESTS
+
+At minimum, test:
+
+- normal launch
+- Home
+- Today
+- This Week
+- All Tasks
+- Browse Rooms
+- total-task-count interaction
+- Search opening at page top
+- Search opening after deep scrolling
+- typing Kitchen
+- searching bathroom and bath
+- backspacing to an empty query
+- Clear Search
+- Search result selection
+- room selection
+- rooms with no tasks currently due
+- future-task visibility
+- Skip visibility
+- Done visual state
+- background scroll locking
+- modal focus
+- room picker
+- Backup & Restore opening
+- public asset versions
+- console warnings and errors
+- horizontal overflow at 390×844
+
+Do not mutate real production task state.
+
+PHYSICAL-IPHONE LIMITATION
+
+Explicitly identify anything that cannot be conclusively verified without a physical iPhone.
+
+Automated WebKit and a 390×844 viewport are not equivalent to:
+
+- physical Safari
+- an installed Home Screen PWA
+- VoiceOver
+- Dynamic Type
+- iOS software keyboard
+- Reduce Motion
+- iOS share sheet
+- Files import
+- offline cold launch
+- Safari browser controls expanding and collapsing
+
+GRADING
+
+Each reviewer must independently provide:
+
+- overall letter grade, including plus or minus
+- score out of 100
+- confidence: High, Medium, or Low
+
+Also grade:
+
+- usefulness
+- daily clarity
+- iPhone experience
+- accessibility
+- visual design
+- reliability
+- data safety
+- performance
+- maintainability
+- readiness for personal use
+- readiness for friends and family
+- readiness for hotel or staff use
+
+Each reviewer must state:
+
+- three strongest qualities
+- three most serious problems
+- highest-risk issue
+- highest-value opportunity
+- next three recommended actions
+- what should not be built yet
+- one verdict:
+  - Continue
+  - Continue With Conditions
+  - Pause And Repair
+  - Stop
+
+Do not inflate grades to be polite.
+
+ROUND 1 — INDIVIDUAL SPEECHES
+
+Give every reviewer a substantive opening statement containing:
+
+- findings
+- grade
+- evidence
+- central argument
+- highest risk
+- highest-value opportunity
+- recommended next actions
+- explicit deferrals
+
+Avoid repeating identical findings unless the reviewer’s reasoning differs.
+
+ROUND 2 — CROSS-EXAMINATION
+
+Each reviewer must identify:
+
+- one reviewer they strongly agree with
+- one conclusion they challenge
+- one underestimated risk
+- one feature they would defer
+- one repair they consider non-negotiable
+
+Allow the challenged reviewer to respond.
+
+ROUND 3 — STRUCTURED DEBATE
+
+Debate:
+
+1. Should HomeTask launch on Home or Today?
+2. Should Today include overdue and unresolved safety tasks?
+3. How deeply should future tasks be buried?
+4. Should total task count remain visible?
+5. Should Search be primary or secondary?
+6. Should Search be a bottom sheet, full-screen interface, or inline expansion?
+7. Is the current visual design premium enough?
+8. Should visual redesign occur before or after editing architecture?
+9. Should task and room editing be the next major capability?
+10. Should seasonal recurrence ship with editing or separately?
+11. Should the 100-zone and 200-task library be built now?
+12. Are custom swipe gestures appropriate?
+13. Is data safety sufficiently tested?
+14. Is HomeTask ready to share?
+15. What evidence is required before accounts or synchronization?
+
+For every question provide:
+
+- supporting argument
+- opposing argument
+- dependencies
+- risk
+- panel disposition
+- dissent, if any
+
+MASTER PRODUCT BLUEPRINT
+
+Create the following durable artifacts.
+
+A. HOMETASK PRODUCT CONSTITUTION
+
+Define:
+
+- primary promise
+- primary daily question
+- Home responsibilities
+- Today responsibilities
+- Setup/Edit responsibilities
+- what remains secondary
+- language and tone
+- destructive-action rules
+- progressive-disclosure rules
+- older-user requirements
+- accessibility requirements
+- what HomeTask should refuse to become
+
+Create a “simplicity budget” that future features must satisfy.
+
+For each proposed feature explain:
+
+- complexity introduced
+- where that complexity lives
+- how daily use stays simple
+- what remains hidden until requested
+
+B. INFORMATION ARCHITECTURE
+
+Propose at least two viable navigation structures and select one.
+
+Cover:
+
+- Home
+- Today
+- This Week
+- Browse Rooms
+- All Tasks
+- Search
+- Setup/Edit
+- Backup & Restore
+
+Provide textual iPhone wireframes.
+
+Specify:
+
+- default launch destination
+- Home behavior
+- Back behavior
+- scroll restoration
+- modal behavior
+- lost-user recovery
+- future-task access
+- search-result navigation
+- separation of daily use from setup
+
+C. VERSION-2 DATA ARCHITECTURE
+
+Design a future-proof vanilla-JavaScript model separating:
+
+1. Seed zone templates.
+2. User-created zones.
+3. Task templates.
+4. Active task instances.
+5. User-created task definitions.
+6. Recurrence.
+7. Completion/scheduling state.
+8. Archived records.
+9. Preferences.
+10. Backup/migration metadata.
+
+Provide example JavaScript objects.
+
+Specify:
+
+- stable IDs
+- crypto.randomUUID()
+- authoritative seed fields
+- user-editable fields
+- referential integrity
+- archive versus delete
+- orphan prevention
+- duplicate handling
+- ordering
+- schema versioning
+- migration from current records
+- current-state compatibility
+- backup-schema evolution
+- rollback
+
+Do not implement it during the audit.
+
+D. RECURRENCE SPECIFICATION
+
+Design support for:
+
+- every X days
+- every X weeks
+- every X months
+- every X years
+- annual date
+- Spring
+- Summer
+- Fall
+- Winter
+- one-time
+- paused
+- professionally maintained, if recommended
+
+Address:
+
+- calendar arithmetic
+- month-end behavior
+- leap years
+- daylight-saving time
+- local dates versus timestamps
+- hemisphere
+- seasonal defaults
+- completion-date scheduling
+- skip overrides
+- recurrence edits after completion
+- migration from intervalDays
+
+Provide pseudocode and acceptance tests.
+
+E. EDITING AND SETUP EXPERIENCE
+
+Design older-user-friendly flows for:
+
+- Add Room or Zone
+- Rename Room or Zone
+- Archive Room or Zone
+- Delete Room or Zone
+- Add Task
+- Add Task From Template
+- Create Custom Task
+- Edit Task
+- Move Task
+- Change Recurrence
+- Pause Task
+- Archive Task
+- Delete Task
+- Undo
+
+Use progressive disclosure.
+
+Keep common flows short.
+
+Place advanced options behind “More Options.”
+
+Provide textual wireframes and exact button language.
+
+F. TEMPLATE-LIBRARY ARCHITECTURE
+
+Design a machine-readable structure supporting at least:
+
+- 100 zone templates
+- 200 task templates
+
+Do not produce an unstructured filler list.
+
+Zone-template fields should include:
+
+- id
+- canonical title
+- category
+- aliases
+- property types
+- repeatable
+- numbering support
+- common/advanced
+- compatible task categories
+
+Task-template fields should include:
+
+- id
+- canonical title
+- category
+- aliases
+- recommended zone categories
+- default recurrence
+- alternative recurrence
+- safety classification
+- seasonal relevance
+- required equipment/system
+- common/advanced
+- tags
+
+Create a coverage matrix across:
+
+- bedrooms
+- bathrooms
+- kitchens
+- living areas
+- offices
+- utility systems
+- storage
+- exterior structures
+- landscaping
+- pools and recreation
+- vehicles
+- equipment
+- pets
+- safety
+- seasonal maintenance
+- rental properties
+- hospitality
+- commercial facilities
+
+Define generator rules for:
+
+- numbered bedrooms
+- numbered vehicles
+- hotel rooms
+- floors
+- wings
+- repeated facility spaces
+
+Identify duplication and naming risks.
+
+Provide representative examples proving the taxonomy.
+
+Create a code-ready packet that a less expensive model can use to generate and validate the complete library.
+
+Do not spend the response padding the library with low-quality entries.
+
+G. VISUAL-DESIGN COUNCIL
+
+Create three distinct visual directions satisfying:
+
+- dark brushed titanium
+- liquid-mercury highlights
+- restrained iridescence
+- OLED contrast
+- older-user readability
+- 44×44-point controls
+- native iPhone presence
+- calm motion
+- reduced motion
+- high performance
+
+For each include:
+
+- name
+- thesis
+- palette
+- typography
+- cards
+- controls
+- status integration
+- reflections
+- motion
+- accessibility risks
+- performance risks
+- Home example
+- Today-card example
+- Search example
+- Edit Task example
+
+Have the panel debate and vote on one direction.
+
+For the winner, create a code-ready design-system specification:
+
+- CSS variables
+- typography scale
+- spacing
+- radii
+- shadows
+- borders
+- metallic gradients
+- contrast minimums
+- motion timing
+- easing
+- focus
+- pressed
+- disabled
+- safe areas
+- large text
+- reduced motion
+
+Do not apply the redesign during the audit.
+
+H. SECURITY AND PRIVACY THREAT MODEL

@@ -1,0 +1,17 @@
+- [Cartographer CSS interference](cartographer-css.md) — @replit/vite-plugin-cartographer resets page CSS and blocks WebSocket HMR; remove it from Vite configs.
+- [HomeTask backup safety architecture](backup-safety-arch.md) — atomic import (staging+snapshot), recovery-data preservation (250 KB cap), interrupted-import startup rollback, snapshot format migration, build env vars.
+- [Dialog all:unset close bug](dialog-all-unset-close-bug.md) — `all:unset` on `<dialog>` breaks `close()` visibility; use targeted resets + `dialog:not([open]) { display:none }` instead.
+- [v1 storage quirks for migration](v1-storage-quirks.md) — v1 Boolean-coerces doneToday and never sanitizes lastDone/viewMode; equivalence audits must expect exact documented repair diffs.
+- [Bottom-sheet dialog pattern](sheet-dialog-pattern.md) — dialog = stable clip container, animate only inner sheet; body needs min-height:0; debounce must be cancelled on every clear/close path.
+- [CP2 module split verification](cp2-module-split.md) — pre-split baseline is commit 17d3422 (HEAD moves via auto-checkpoints); import-order.test.mjs structurally guards startup-before-storage evaluation order.
+- [v2 envelope field names](v2-envelope-field-names.md) — canonical field is `prefs` not `preferences`; confusing them silently breaks isValidVerifiedWrapper and test fixtures.
+- [shadow-config flag and coupled tests](shadow-config-flag-tests.md) — 3 tests hard-code the flag value; must be updated whenever SHADOW_MIGRATION_ENABLED toggles.
+- [v2 activation controller design](activation-tx-design.md) — invariants, state machine, quarantine pattern, concurrent-v1 mutation test injection trick, CP5B scope.
+- [Release identity files](release-identity-files.md) — 6 locations must be updated together on every build bump (script.js, sw.js ×2, index.html, sw-install test ×2).
+- [V2BackupService design](v2-backup-service-design.md) — adapter-only injection, import-tx.js delegation, null-DATA rollback trap, 6-gate test structure.
+- [withLockTimeout design and trailing-args gotcha](with-lock-timeout-design.md) — trailing timeoutMs,scheduler must go after the callback close-brace; silently missing → race disabled → sched.pendingCount=0.
+- [Concurrent lock test design](concurrent-lock-test-design.md) — TracingLock, txId prefix quirks (import/undo are prefixed internally), setImmediate barrier, blob.text() for native Blobs.
+- [F1 custom tasks implementation](f1-custom-tasks-impl.md) — flag, duplicate rule, singleton constraint, room-filter bug fix, _applySrQuery grouping fix, test totals.
+- [Deferred-delete visible state](deferred-delete-visible-state.md) — one visible-task source must drive cards, search, counts, and undo actions above modal layers.
+- [Explicit custom-room storage](custom-room-contract.md) — keep ordered custom-room records in a dedicated v1 key, never inside the task array.
+- [E2 disabled startup boundary](e2-disabled-startup.md) — v2 coordinator loads only after verified v2 authority; normal boot stays v1-only with shadow diagnostics detached.

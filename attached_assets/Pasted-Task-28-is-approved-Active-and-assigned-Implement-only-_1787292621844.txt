@@ -1,0 +1,46 @@
+Task #28 is approved, Active, and assigned.
+
+Implement only the accepted evidence-restoration plan.
+
+Requirements:
+
+- Restore the 25 pure synthetic validator, presenter, and pub-sub checks removed during Task #26.
+- Retain the four disabled-isolation checks.
+- `v2-shadow-ui.test.mjs` should therefore contain 29 checks:
+  - 25 retained pure synthetic checks
+  - 4 disabled-isolation checks
+- Keep the nine automatic diagnostic UI/runtime checks intentionally retired.
+- Do not restore Upgrade Check, shadow-status UI, Share Report, automatic startup diagnostics, or Backup-dialog subscriptions.
+- Do not change runtime behavior merely to satisfy tests.
+- Preserve:
+  - `V2_ACTIVATION_ENABLED = false`
+  - `SHADOW_MIGRATION_ENABLED = false`
+  - zero disabled-startup v2/shadow imports and I/O
+  - the E2 coordinator
+  - all accepted v1/F1 behavior
+- Do not modify storage, backup formats, migration behavior, UI, deployment configuration, or release identity.
+- Do not publish, access live data, activate Task #27, or begin Step 8.
+
+Validation:
+
+1. Run syntax/type checks relevant to the restored tests.
+2. Run the focused shadow-UI, shadow-bridge, coordinator, and structural/import suites.
+3. Confirm `v2-shadow-ui.test.mjs` reports exactly 29 passing checks.
+4. Run the complete regression exactly once.
+5. Expected final ledger:
+   - 32 suites
+   - 1,457/1,457 checks passed
+   - 0 failures
+6. Do not rerun the full regression for reporting corrections.
+7. No production build is required because this correction restores tests and documentation only. If a runtime file unexpectedly needs modification, stop before changing it.
+
+Return:
+
+- Exact files changed
+- The restored 25-check ledger
+- Confirmation that only nine UI/runtime checks remain retired
+- Focused results
+- Exact full-regression ledger
+- Confirmation that both v2 and shadow defaults remain false
+- Confirmation that no runtime, user data, build, deployment, or Step 8 action occurred
+- Final Task #28 status

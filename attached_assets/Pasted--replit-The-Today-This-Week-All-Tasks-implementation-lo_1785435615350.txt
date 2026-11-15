@@ -1,0 +1,50 @@
+@replit
+
+The Today / This Week / All Tasks implementation looks correct, but please make these final corrections and perform actual runtime tests.
+
+1. Correct preference migration
+
+Migrate the old dueNowDefault preference as follows:
+
+- dueNowDefault === true → viewMode: "week"
+- dueNowDefault === false → viewMode: "all"
+- dueNowDefault missing or undefined → viewMode: "today"
+
+This preserves an established user’s explicit “show everything” choice while making Today the default for users without a saved preference.
+
+Do not reset any task history, room selection, onboarding state, completion state, or skip override.
+
+2. Verify after-action rendering
+
+Confirm that “full refresh” means an in-app list rerender—not location.reload() or a browser-page refresh.
+
+After Done or Skip in Today and This Week:
+
+- Recalculate the task’s effective due date and status.
+- Move or remove the task from the current view when appropriate.
+- Update counts and progress immediately.
+- Preserve reasonable scroll position.
+- Do not return the user to the top of the page.
+- Do not lose keyboard focus unexpectedly.
+- Do not create visible flicker.
+
+3. Perform real runtime tests
+
+Do not rely only on code review. Test the running development preview interactively:
+
+- Fresh user defaults to Today.
+- Existing true preference migrates to This Week.
+- Existing false preference migrates to All Tasks.
+- Today shows overdue, critical/safety, due-today, and done-today tasks only.
+- This Week includes the next seven calendar days.
+- All Tasks shows the entire catalog.
+- Done causes the task to move correctly and remain green when appropriate.
+- Skip today and Skip week move tasks between views correctly without marking them complete.
+- Search, room filter, and view mode work simultaneously.
+- Arrow-key navigation works between the three view buttons.
+- Reload preserves the selected view.
+- Empty-state buttons switch views correctly.
+- No console errors occur.
+- Service-worker v10 serves the new assets after a normal reload.
+
+Report the exact development preview URL tested and distinguish runtime-tested behavior from code-reviewed behavior.

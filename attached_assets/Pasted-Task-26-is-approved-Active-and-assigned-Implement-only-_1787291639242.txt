@@ -1,0 +1,63 @@
+Task #26 is approved, Active, and assigned.
+
+Implement only the bounded E2 repository/startup integration described in its accepted plan, with these authoritative clarifications:
+
+- `V2_ACTIVATION_ENABLED` must remain `false`.
+- `SHADOW_MIGRATION_ENABLED` must become and remain `false`.
+- Disabled startup must not import dynamically, construct, initialize, lock, read, write, migrate, recover, roll back, or start timers through any v2 repository or shadow path.
+- The accepted v1 repository, backup service, backup facade, UI, custom tasks, custom rooms, Undo, and recovery behavior remain authoritative.
+- `V2Repository` does not need to conform to the v1 UI-facing repository contract during Step 7.
+- Existing interrupted-v1-import recovery in `app/startup.js` remains an accepted pre-repository F1 exception.
+- Do not modify user-facing UI, storage formats, backup formats, migration data, deployment configuration, release identity, or service-worker behavior.
+- Do not access live data, run a migration, enable v2, publish, or begin Step 8.
+- Do not carry forward stale `v21` wording.
+
+Architecture requirements:
+
+1. Add the smallest dedicated v2 startup/coordinator boundary.
+2. `src/script.js` must not directly import or construct `V2Repository`.
+3. When activation is disabled, startup must select exactly the existing v1 composition.
+4. The v2 repository may enter the production graph only through the coordinator’s explicitly enabled path.
+5. Prefer deferring the v2 repository module import until an enabled branch is selected.
+6. Shadow diagnostics must not be imported or invoked during disabled startup.
+7. Preserve import ordering, cycle protection, repository boundaries, and the accepted backup facade.
+8. Do not modify `v2-repository.js` merely to make it resemble v1. Change it only if the coordinator cannot be implemented otherwise, and stop first if that would alter its data contract.
+
+Testing:
+
+- Add only the non-duplicate focused coverage identified in the audit:
+  - coordinator-only construction;
+  - disabled zero-import/zero-I/O behavior;
+  - exact v1 composition parity;
+  - shadow default disabled with no import/invocation;
+  - updated import authorization and cycle protection.
+- Use traps for v2 imports, storage, locks, mutations, timers, migration, recovery, and rollback.
+- Use synthetic fixtures only.
+- Run syntax/type checks and directly affected focused suites first.
+- If focused validation passes, produce one production build with `BASE_PATH="/"`.
+- Then run the complete regression exactly once.
+- Do not rerun the complete regression to correct reporting.
+- Do not publish the build.
+
+Stop immediately for:
+
+- any v1 behavior difference;
+- v2 or shadow I/O;
+- a migration or storage-format requirement;
+- an import cycle;
+- direct storage access outside the accepted boundaries;
+- a backup/recovery regression;
+- unexplained test or build failure.
+
+Return:
+
+- Exact files changed
+- Final startup/composition flow
+- Proof that both v2 activation and shadow migration are disabled
+- Proof of zero v2 imports/construction/I/O in disabled mode
+- Focused-test results
+- Production-build result
+- Exact full-regression suite/check ledger
+- Confirmation that F1 behavior and formats are unchanged
+- Confirmation that no live data or deployment was touched
+- Confirmation that Step 8 was not started

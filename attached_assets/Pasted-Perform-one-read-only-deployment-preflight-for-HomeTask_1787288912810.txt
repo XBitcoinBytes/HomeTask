@@ -1,0 +1,87 @@
+Perform one read-only deployment preflight for HomeTask `v22-f1`. This report will determine whether publishing can be safely approved.
+
+Do not edit files, create tasks, build, run tests, restart workflows, access live/iPhone data, or publish.
+
+Accepted baseline:
+
+- Task #23 is merged and complete.
+- Production artifact:
+  - `/assets/index-DQjDY3fE.js`
+  - `/assets/index-BSiqrrZg.css`
+- Regression: 31 suites, 1,456/1,456 checks passed.
+- Release identity: `v22-f1`
+- Service-worker cache: `hometask-v22-f1`
+- v2 remains disabled.
+- `.replit` and deployment configuration were not changed.
+- Security headers remain unresolved.
+
+Determine and report:
+
+1. Exact publishing target
+   - Identify whether HomeTask will use Replit Static Deployment, Autoscale, Reserved VM, or another route.
+   - Cite the exact workspace configuration proving this.
+   - Explain how `artifacts/home-tasks/dist/public` will be served at the final public route.
+
+2. Exact artifact selection
+   - Confirm publishing will use the existing authoritative artifact without rebuilding.
+   - Confirm its main asset paths are exactly:
+     - `/assets/index-DQjDY3fE.js`
+     - `/assets/index-BSiqrrZg.css`
+   - Confirm the artifact contains no Vite development client, raw source entry, development overlay, or source-map directive.
+   - Confirm `v22-f1` and `hometask-v22-f1` are present.
+   - Confirm v2 activation remains false.
+
+3. Security-header support
+   - Consult current official Replit documentation.
+   - Determine whether `[[deployment.responseHeaders]]` is honored by this exact deployment type.
+   - Include links or precise citations to the official documentation used.
+   - Do not assume a feature documented for Static Deployment also applies to Autoscale.
+
+4. Exact header plan
+   If the target supports response headers, provide the exact proposed configuration for:
+
+   - Content-Security-Policy
+   - X-Content-Type-Options: nosniff
+   - Referrer-Policy: strict-origin-when-cross-origin
+   - Permissions-Policy
+   - frame-ancestors or equivalent clickjacking protection
+   - X-Frame-Options: DENY if appropriate
+   - Strict-Transport-Security only if the final domain is permanently HTTPS
+
+   Validate the proposed CSP against HomeTask’s actual scripts, styles, manifest, service worker, images, and network usage.
+
+   If the target does not support these headers, identify the smallest officially supported Replit or edge-layer alternative. Do not propose HTML meta tags as equivalent protection.
+
+5. Deployment and rollback mechanics
+   - State the exact non-destructive publish action that would be used.
+   - State how deployment terminal success or failure is observed.
+   - Identify the previous deployment or rollback mechanism available if the public verification fails.
+   - Confirm publishing cannot delete or migrate HomeTask user data.
+   - Identify anything that could make rollback unsafe or ambiguous.
+
+6. Public verification plan
+   Provide the exact read-only checks to perform after publishing:
+
+   - final URL returns HTTP 200
+   - production HTML references the accepted hashed assets
+   - no development markers are exposed
+   - manifest, icons, and service worker return successfully
+   - service worker installs using the exact generated paths
+   - expected security headers are present in actual HTTP responses
+   - `v22-f1` is visible where intended
+   - v2 remains disabled
+   - basic page startup produces no console error
+
+7. Task state
+   - Report Task #22’s current state, dependency, and assignee.
+   - Confirm whether it can be activated and used for publishing without creating another task.
+   - Do not attempt activation during this report.
+
+Finish with one verdict:
+
+- `PASS — safe to authorize Task #22 publishing`
+- or `GAP — do not publish`
+
+For every GAP, give the smallest required resolution.
+
+Stop after the report. Make no changes and do not publish.

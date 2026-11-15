@@ -1,0 +1,94 @@
+CP4C and CP4D are accepted. Begin CP5A only: implement and comprehensively test controlled v2 activation infrastructure behind a compile-time flag that remains false.
+
+Do not publish. Do not enable v2. Do not change the UI, catalog, visual design, Done/Skip behavior, or service worker. Do not propose unrelated tasks.
+
+Use the already-approved CP1–CP4 modules, schemas, validators, migration functions, backup v2 support, shadow results, §G snapshot rules, rollback rules, and retention requirements. Do not redesign them.
+
+CP5A objective
+
+Create the production-quality activation controller that can eventually perform:
+
+snapshot → migrate → verify → stage → commit authority marker last → startup recovery/rollback
+
+With the activation flag false, the running app must remain byte-for-byte behaviorally identical to the accepted v20-shadow build and remain entirely authoritative on v1.
+
+Required behavior
+
+1. Compile-time gate
+
+Add V2_ACTIVATION_ENABLED = false in an isolated configuration module.
+
+It must not be controllable by URL, localStorage, environment variable, remote configuration, or UI.
+
+2. Preconditions
+
+Activation may begin only when:
+
+- an existing shadow wrapper passes canonical isValidVerifiedWrapper()
+- its source fingerprint matches a freshly computed fingerprint of current v1 data
+- the v2 candidate passes the complete canonical envelope validator
+- assertEquivalent() reports zero unexpected differences
+- no conflicting activation transaction already exists
+
+Any failed precondition must leave v1 and all unrelated storage byte-identical.
+
+3. Verified snapshot
+
+Before any authoritative v2 write:
+
+- capture every key required by the approved §G snapshot specification
+- preserve exact raw strings and exact absence/null state
+- save the snapshot
+- read it back
+- verify it byte-for-byte
+
+If snapshot storage or verification fails, abort before touching authoritative storage.
+
+4. Staging and commit
+
+- Write the candidate to a dedicated activation staging key.
+- Read it back and validate schema, fingerprint, and equivalence.
+- Write the final v2 data key.
+- Read it back and verify it.
+- Commit a small authority/activation marker last.
+- Until that final marker is successfully written and verified, v1 remains authoritative.
+- Do not delete v1 data or the rollback snapshot.
+
+5. Startup recovery
+
+The activation recovery check must run before any app module reads authoritative storage.
+
+On interrupted, malformed, incomplete, or unverifiable activation:
+
+- keep or restore v1 authority
+- restore snapshot keys byte-for-byte where required
+- remove or quarantine incomplete v2 transaction state
+- never write the string "null" for absent values
+- leave unrelated localStorage keys untouched
+- return a calm structured result without crashing the app
+
+6. Idempotency
+
+Repeated activation attempts and repeated startup recovery must be safe:
+
+- already committed and verified → no rewrite
+- staged but not committed → recover safely
+- final v2 data written but authority marker missing → v1 remains authoritative
+- marker present but v2 invalid → rollback to v1
+- valid v1 and v2 coexist without ambiguity
+
+7. Testing
+
+Use injected storage, clock/today, digest, and failure scheduler. No real-time sleeps.
+
+Add failure-injection tests for every storage read/write boundary, including:
+
+- snapshot write/readback failure
+- quota exceeded
+- staging write/readback failure
+- v2 final write/readback failure
+- authority-marker write/readback failure
+- crash/restart after each transaction state
+- rollback failure
+- malformed transaction records
+- stale or mismatched

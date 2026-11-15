@@ -1,0 +1,62 @@
+Diagnose the physical-iPhone F1 smoke-test failure for custom-room creation. Do not edit code, create a task, build, run automated suites, restart workflows, publish, or access existing user data.
+
+Physical-device evidence:
+
+- Approximate device: iPhone 16 Pro with the newest available iOS.
+- Published URL: `https://web-starter-kit-shipouts.replit.app`
+- Published release: `v22-f1`
+- The floating `+` button successfully opens custom-task creation.
+- The user cannot find any visible way to add a room or custom zone.
+- App loading, restart persistence, task deletion/Undo, built-in protection, and backup export passed.
+- VoiceOver is deferred.
+
+Use a fresh disposable browser context at an iPhone 16 Pro-like logical viewport, approximately 402×874. Complete onboarding normally using synthetic isolated state.
+
+Investigate:
+
+1. Follow the interface as a normal user would:
+   - Home
+   - Browse Rooms
+   - current-room selector
+   - task-creation room selector
+   - room-management controls
+
+2. Determine whether a Create Room/New Room control exists in the published UI.
+
+3. If it exists:
+   - State its exact navigation path and visible label.
+   - Confirm whether it is initially visible without scrolling.
+   - Check whether it is below a clipped sheet, obscured by safe-area padding, outside the viewport, hidden by CSS, or available only through a non-obvious interaction.
+   - Measure its touch target.
+   - Capture screenshots showing where the user would be expected to find it.
+   - Determine whether a reasonable first-time user could discover it without instructions.
+
+4. If it does not exist:
+   - Trace the published DOM, source wiring, feature flags, controller listeners, and relevant CSS.
+   - Identify the exact reason it is absent.
+   - Confirm whether the published `v22-f1` artifact differs from the accepted Step 4 custom-room implementation.
+
+5. In the disposable context only, if the control is reachable, verify that it opens the create-room form and that the form is usable at the mobile viewport. Do not create a room unless creation is necessary to distinguish a visibility defect from a functional defect.
+
+6. Check for:
+   - console errors;
+   - failed network requests;
+   - horizontal or vertical clipping;
+   - sheet scrolling problems;
+   - keyboard-related obstruction;
+   - inadequate safe-area spacing;
+   - missing accessible name;
+   - controls below another fixed element.
+
+Return a concise diagnosis with:
+
+- `CONTROL ABSENT`, `CONTROL HIDDEN/CLIPPED`, `CONTROL PRESENT BUT UNDISCOVERABLE`, or `CONTROL PRESENT AND CLEAR`
+- Exact reproduction steps
+- Screenshot identifiers
+- Exact source selectors/files involved
+- Whether room creation itself works once reached
+- Whether this is a publication mismatch, mobile CSS defect, navigation/discoverability defect, or user-instruction ambiguity
+- The smallest proposed fix, but do not implement it
+- Exact focused tests that would be needed
+
+Stop after the report. Do not change or republish anything.

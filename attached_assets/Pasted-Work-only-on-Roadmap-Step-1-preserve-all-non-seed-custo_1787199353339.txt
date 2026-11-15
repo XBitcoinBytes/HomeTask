@@ -1,0 +1,57 @@
+Work only on Roadmap Step 1: preserve all non-seed/custom data through the existing v1 load, save, restart, backup, and restore paths.
+
+Accepted baseline:
+
+- E1 is published.
+- 24 test suites pass.
+- 1,338/1,338 tests pass.
+- v2 is disabled.
+- No live migration is authorized.
+- Never delete or modify live/iPhone data.
+- Preserve all built-in data and behavior.
+
+Requirements:
+
+1. Inspect the current v1 persistence and backup paths before editing.
+2. Identify every place where data is filtered, normalized, reconstructed from seed data, or serialized.
+3. Ensure custom/non-seed rooms, tasks, relationships, identifiers, supported fields, and safe unknown fields survive:
+   - initial load
+   - save and reload
+   - application restart
+   - backup creation
+   - restore from backup
+4. Do not enable v2, run a migration, alter live data, redesign the UI, publish, or begin later roadmap steps.
+5. Use synthetic fixtures or copies only. Never test against live/iPhone data.
+6. Add focused regression tests covering:
+   - mixed built-in and custom data
+   - repeated load/save cycles
+   - backup/restore equality
+   - malformed or partial data
+   - write/load failure behavior
+   - preservation of identifiers, room assignments, and supported custom fields
+7. Make the smallest safe, reversible change.
+8. Run the focused tests first. If they pass, run the complete regression suite once.
+9. Do not repeatedly rerun unchanged tests or poll in a loop.
+
+Stop immediately and report instead of guessing if you find:
+
+- possible data loss
+- ambiguous normalization rules
+- a required destructive action
+- an unexplained regression
+- scope beyond v1 data preservation
+- any need to access or migrate live data
+
+When finished, stop and provide one concise evidence report containing:
+
+- root cause found
+- exact files changed
+- behavior before and after
+- focused-test totals
+- full-suite totals with zero failures
+- synthetic backup/restore comparison results
+- confirmation that v2 remains disabled
+- confirmation that no live data was accessed or changed
+- remaining risks or follow-up items
+
+Do not publish and do not start Roadmap Step 2. Wait for approval after the report.

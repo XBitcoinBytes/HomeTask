@@ -1,0 +1,36 @@
+A2.2a is accepted at 841/841 tests. Begin A2.2b only.
+
+Connect the accepted, currently disconnected V1BackupService to the existing Backup & Restore workflow through the planned facade/dependency-injection boundary.
+
+Requirements:
+- Preserve backup.js as the public facade expected by backup-ui.js.
+- Instantiate and inject the service at the existing application composition root; do not create hidden singletons inside the service.
+- Use the same active V1Repository instance and existing backup, staging, recovery, catalog, clock, file-reader, and delivery dependencies as applicable.
+- Route the existing backup operations through the service without changing their externally observable behavior: export; file validation and import preparation; confirmed import; Undo Last Import; recovery-data download and recovery-notice state; last-backup metadata.
+- Preserve current method return shapes, error messages, confirmation flow, reload behavior, iOS Share Sheet/download fallback, atomic import, rollback, interrupted-import recovery, and exact stored bytes.
+- Preserve the existing v1 backup schema and byte-exact task/meta import results.
+- Do not introduce direct localStorage, sessionStorage, navigator, document, location, timers, or catalog-singleton access into the transaction core.
+- Keep V2_ACTIVATION_ENABLED = false.
+- Do not alter task behavior, UI styling, catalog data, service worker, build label, or user-facing copy.
+- Do not fix unrelated issues in this checkpoint.
+
+Add tests proving:
+1. Every existing facade operation delegates to the injected service exactly once.
+2. Facade method results and failures preserve the current contract.
+3. Export/import/undo/recovery behavior remains semantically and byte-for-byte equivalent.
+4. Missing or invalid service injection fails closed with a calm controlled error and cannot mutate storage.
+5. Ordinary task writes still cannot touch the Undo Import snapshot.
+6. The old implementation path is no longer independently reachable after injection.
+7. No circular imports or new unauthorized storage access are introduced.
+
+Run the focused backup-service/facade tests and the complete suite. Then run a 390×844 production-build smoke covering export, import cancellation, confirmed import, Undo Last Import, recovery notice, reload persistence, console errors, and horizontal overflow.
+
+Return:
+- Exact files changed and why
+- Exact facade and constructor wiring
+- Focused and full-suite totals
+- Browser-smoke results
+- Confirmation that v1 remains authoritative
+- Confirmation that nothing was published
+
+Stop after A2.2b. Do not begin another checkpoint, build-label change, or publication task.

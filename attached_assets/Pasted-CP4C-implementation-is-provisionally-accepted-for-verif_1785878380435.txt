@@ -1,0 +1,118 @@
+CP4C implementation is provisionally accepted for verification only. Do not publish or deploy.
+
+Before final CP4C acceptance, complete a verification-only pass. Do not add features, create a native app, modify the catalog, or address the unrelated API healthcheck yet.
+
+1. Resolve the catalog discrepancy
+
+Your latest summary says “126 tasks across 23 rooms,” but the established pre-CP4C catalog was 122 tasks across 24 rooms.
+
+CP4C must not change task or room data.
+
+Verify from the actual runtime catalog and report:
+- exact task count
+- exact room count
+- safety-task count
+- whether any catalog.js or task-data lines changed during CP4C
+- the complete git diff for catalog-related files, which should be empty
+
+If the runtime is not still 122 tasks across 24 rooms, stop and report the exact cause. Do not repair it without approval.
+
+2. Provide an authoritative CP4C evidence report
+
+List:
+- every added, modified, moved, or deleted file
+- exact purpose of each change
+- confirmation that v1 remains authoritative
+- confirmation that only hometask-v2-shadow may be written by CP4C
+- confirmation that no v1 task or preference value is changed by the shadow process
+- confirmation that nothing has been published
+
+3. Reconcile the 453-test total
+
+Report every suite name with:
+- previous count
+- current count
+- number added
+- pass/fail result
+
+Explain exactly how the total increased from 405 to 453. Do not report only the grand total.
+
+4. Run a clean production build
+
+After tests pass:
+- remove only generated build output using the project’s normal safe build process
+- run a clean production build
+- report the generated JS and CSS asset names
+- report every generated dynamic chunk
+- confirm Build v20-shadow appears in the built HTML
+- confirm the SW cache is hometask-v20-shadow
+- confirm the built app contains the enabled shadow bridge
+- do not publish
+
+5. Run browser smoke tests at 390×844
+
+Test both a fresh user and a returning user with realistic v1 localStorage.
+
+Verify individually:
+- app loads without console errors or unhandled rejections
+- onboarding and existing navigation still work
+- catalog remains unchanged
+- Done, Skip Today, Skip Week, search, room filtering, backup export, and import still work
+- shadow work begins only after app.init() completes
+- Backup & Restore shows “Data Upgrade Check: Running” if opened while the check is active
+- it updates live to Verified or Needs Review without reopening
+- Verified appears only after canonical wrapper validation succeeds
+- malformed verified-looking wrappers show Needs Review
+- Share Report is visible only for a genuinely verified wrapper
+- closing and reopening the sheet does not duplicate subscriptions
+- a throwing UI subscriber does not alter the diagnostic result or create an unhandled rejection
+- v1 localStorage values remain byte-for-byte unchanged after the shadow run
+- hometask-v2-shadow contains a valid verified wrapper
+- repeated startup preserves a valid existing verified shadow correctly
+
+6. Verify report privacy
+
+Generate the shared Upgrade Check JSON and inspect every field.
+
+Confirm it contains no:
+- task names
+- room or zone names
+- task history dates
+- completion records
+- searches or search text
+- tags
+- storage values
+- fingerprints or digests
+- raw wrapper or candidate
+- internal error messages
+
+Test both:
+- native share path with mocked supported APIs
+- download fallback
+- AbortError cancellation
+- Blob/File/canShare/share/download failures
+
+7. Verify the service-worker update behavior
+
+Using the built output, test:
+- both required JS and CSS assets must be found
+- missing or ambiguous asset references fail installation
+- asset-fetch and cache-write failures fail installation
+- incomplete v20-shadow cache is removed after failure
+- v19 cache remains untouched after failed installation
+- skipWaiting is called only after complete successful caching
+- successful activation removes the old cache
+- the core app launches offline after the successful update
+- failure of a nonessential shadow dynamic chunk does not prevent the core v1 app from loading
+
+8. Correct the contradictory comment
+
+Update shadow-config.js documentation so it accurately states that true is intentional for the v20-shadow diagnostic build and that the normal post-diagnostic default is false.
+
+This is documentation-only and must not change behavior.
+
+9. Do not pursue the suggested native-app task
+
+HomeTask is intentionally being completed first as an excellent local-first installable PWA. Do not create or plan a native companion app during CP4C.
+
+Stop after delivering the evidence report, production-build results, and browser-test matrix. Do not publish. Ask separately for approval before any publication.

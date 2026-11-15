@@ -1,0 +1,267 @@
+I approve final corrected CP3 and authorize CP4A only.
+
+CP3 is accepted based on:
+
+- 251/251 automated assertions across seven suites
+- Policy A applied to quarantined user-owned v2 data
+- Effective uniqueness validation
+- Nine-field canonical v2 envelope with completionEvents
+- V1 runtime unchanged
+- src/v2 disconnected from production
+- No build, service-worker change, activation, or publication
+
+Record this QA limitation accurately:
+
+There is currently no committed, repeatable Playwright specification. Earlier browser matrices were interactive browser verification, not a durable automated Playwright suite. Do not claim otherwise. This does not block CP4A because CP4A has no runtime integration. A reproducible browser suite will be required before controlled v2 activation/publication.
+
+CP4A objective:
+
+Implement and test a pure, disconnected shadow-migration runner using injected adapters. It must read supplied v1 values, produce a v2 candidate, verify semantic equivalence, and write only to an injected shadow key.
+
+This approval does not authorize CP4B runtime wiring, real browser storage access, production builds, service-worker changes, or publishing.
+
+1. Pure Runner API
+
+Create a clearly documented API conceptually equivalent to:
+
+runShadowMigration({
+  adapter,
+  catalog,
+  today,
+  clock,
+  appBuild,
+  sourceKeys,
+  shadowKey
+})
+
+Requirements:
+
+- No direct localStorage or sessionStorage access.
+- No DOM or browser globals.
+- No live clock reads.
+- today and timestamps are injected.
+- No production-runtime imports.
+- No side effects outside the injected adapter.
+- Deterministic output for identical inputs and injected time.
+
+2. Hybrid-Route Storage Compatibility
+
+Design the CP4A runner so storage operations may be synchronous or Promise-returning.
+
+Use an async runner boundary and safely await adapter operations. This prepares the storage boundary for a future native iOS adapter without changing the current v1 runtime.
+
+Tests must cover:
+
+- A synchronous memory adapter
+- An asynchronous Promise-based adapter
+- Delayed reads and writes
+- Rejected read/write/remove operations
+- Verification after asynchronous writes
+
+Do not convert the existing production v1 application to asynchronous storage during CP4A.
+
+3. Exact Source Boundaries
+
+Document exactly which v1 keys the future shadow runner will read.
+
+It may read only the approved HomeTask source data required for migration, such as:
+
+- hometask-v1
+- hometask-meta-v1
+- hometask-recent-searches-v1, if part of migration
+
+It must not treat these as migration source data:
+
+- Current backup/undo snapshots
+- Import staging
+- Recovery/quarantine data
+- Unrelated application keys
+- Non-HomeTask keys
+
+The injected tests must prove all source keys remain byte-identical.
+
+4. Dedicated Shadow Key
+
+Use one dedicated, versioned shadow key such as:
+
+hometask-v2-shadow
+
+The shadow key:
+
+- Is never read by the current application UI.
+- Is never treated as active storage.
+- Is never used by Done, Skip, Search, filters, backup, or onboarding.
+- Must not replace hometask-v1.
+- Must have a documented size limit.
+- Must contain a versioned wrapper distinguishing it from an import staging transaction or live v2 storage.
+
+Do not reuse hometask-import-staging-v1 or hometask-import-staging-v2.
+
+5. Shadow Wrapper
+
+Define an exact wrapper containing:
+
+- shadowSchemaVersion
+- sourceSchema
+- targetSchema
+- generatedAt
+- appBuild
+- catalogVersion
+- source fingerprint
+- v2 candidate
+- privacy-safe verification summary
+- status: verified or failed
+
+Do not store raw duplicate v1 values inside the shadow wrapper.
+
+The source fingerprint must not expose household content and must be deterministic for identical source bytes. Use an injected or environment-neutral hashing abstraction if necessary.
+
+6. Verification Sequence
+
+The runner must:
+
+1. Read source values through the adapter.
+2. Preserve their exact pre-run bytes in memory for comparison.
+3. Run the approved pure v1-to-v2 migration.
+4. Validate the canonical nine-field v2 envelope.
+5. Compose v1 and v2 worlds against the same catalog.
+6. Run assertEquivalent() using the same injected today.
+7. Separate documented migration repairs from unexpected differences.
+8. Refuse to create a verified shadow candidate if unexpected differences exist.
+9. Serialize the shadow wrapper.
+10. Enforce its size limit.
+11. Write it to the injected shadow key.
+12. Read it back and verify exact bytes.
+13. Re-read every source key and prove each remains byte-identical.
+14. Confirm unrelated keys remain byte-identical.
+
+A failed verification must never overwrite a previously verified shadow candidate unless an explicit safe replacement policy is defined and tested.
+
+7. Privacy-Safe Report
+
+The report intended for later physical-device review must contain no:
+
+- Task titles
+- Room or zone titles
+- Tags
+- Search terms
+- Completion dates
+- Skip dates
+- User-entered text
+- Raw storage values
+- User-created IDs
+
+It may contain:
+
+- Source and target schema versions
+- Catalog and build versions
+- Total record counts
+- Counts by structural collection
+- Total documented repairs by repair category
+- Total warnings
+- Total unexpected differences
+- Difference category codes without values
+- Verification status
+- Source fingerprint
+- Shadow byte size
+
+Add a test scanning serialized reports for fixture titles, rooms, tags, search terms, dates, and custom IDs.
+
+8. Idempotency
+
+With identical source bytes, catalog, today, and injected timestamp:
+
+- Candidate v2 data must be byte-identical.
+- Verification summaries must be byte-identical.
+- Source fingerprints must be identical.
+- Re-running must not modify v1.
+- Replacement of an identical verified shadow must be harmless and deterministic.
+
+With changed source bytes:
+
+- The source fingerprint must change.
+- A new candidate must be independently verified.
+- A failed new run must not destroy the last verified candidate.
+
+9. Failure Injection
+
+Test:
+
+- Missing v1 keys
+- Fresh install
+- Malformed v1 task storage
+- Malformed v1 metadata
+- Malformed recent-search storage
+- Read failure for each source key
+- Migration exception
+- Envelope-validation failure
+- Equivalence failure
+- Deliberately injected state loss
+- Deliberately injected preference loss
+- Deliberately injected completion/tag/skip loss
+- Shadow-size overflow
+- Shadow write failure
+- Silent lost write
+- Shadow readback mismatch
+- Source key changing during the run
+- Source key changing after shadow write
+- Existing verified shadow candidate
+- Existing malformed shadow candidate
+- Async adapter rejection or timeout behavior
+- Unrelated keys present
+
+For each failure, assert:
+
+- V1 remains unchanged.
+- Unrelated keys remain unchanged.
+- Whether the previous verified shadow is retained.
+- No success is claimed.
+- The returned diagnostic is privacy-safe.
+- No exception escapes where a structured failure is expected.
+
+10. Completion Events
+
+For v1 migration:
+
+- completionEvents remains an empty array.
+- No event is fabricated from lastDone.
+- Its presence and exact type are validated.
+- Shadow equivalence treats the empty collection as the approved v1-to-v2 result.
+
+Include completionEvents in candidate size checks and privacy scans.
+
+11. Runtime Disconnection Guard
+
+Extend the structural import-graph tests to prove:
+
+- src/script.js cannot reach the shadow runner.
+- No src/app module imports it.
+- No runtime code references hometask-v2-shadow.
+- CP4A tests are the only code paths invoking it.
+
+12. Test and Completion Gate
+
+At completion:
+
+- All existing 251 assertions must still pass.
+- Add dedicated CP4A suites.
+- No existing assertion may be weakened, removed, or skipped.
+- Report exact tests by group.
+- Report deliberate-defect proofs.
+- Report sync and async adapter results.
+- Provide a representative privacy-safe report.
+- Provide the shadow wrapper schema.
+- Provide the shadow-runner dependency map.
+- List every file added or changed.
+- Confirm no runtime integration.
+- Confirm v1 keys remain active and unchanged.
+- Confirm public/, dist/, index.html, SW v19, build v19, and production remain unchanged.
+- Confirm nothing was built or published.
+
+Do not create project tasks.
+
+Stop after CP4A and ask:
+
+“Do you approve CP4A as completed and authorize CP4B runtime wiring behind a disabled-by-default flag, or would you like corrections first?”
+
+You may now begin CP4A only.

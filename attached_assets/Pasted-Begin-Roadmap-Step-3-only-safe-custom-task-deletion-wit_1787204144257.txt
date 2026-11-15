@@ -1,0 +1,54 @@
+Begin Roadmap Step 3 only: safe custom-task deletion with confirmation and a five-second undo period.
+
+Use the existing Task #19 proposal if it can be activated. Do not create a duplicate task unless the workflow requires replacing the inactive proposal. Assign the single approved task to yourself and proceed in Build mode.
+
+Accepted baseline:
+
+- Step 1 and Step 2 are complete.
+- 28 suites and 1,423/1,423 checks pass.
+- Custom-task creation works in existing rooms at iPhone viewport sizes.
+- v1 custom-data load/save/restart/backup/restore preservation is verified.
+- v2 remains disabled.
+- No live/iPhone data may be accessed or changed.
+- Nothing should be published during this step.
+
+Scope:
+
+Allow users to delete custom tasks safely while making built-in tasks undeletable at every layer.
+
+Before editing:
+
+1. Inspect the custom-task model, v1 repository, rendering code, existing dialog/toast patterns, accessibility conventions, and tests.
+2. Identify the smallest deletion implementation consistent with the existing architecture.
+3. Reuse the established v1 repository and custom-record contract. Do not write directly to browser storage.
+4. Briefly state the implementation plan, then proceed unless you find data-loss risk, architectural ambiguity, or required scope expansion.
+5. Do not repeatedly inspect unchanged files or create additional planning tasks.
+
+Required behavior:
+
+- Delete controls appear only for valid `_custom: true` tasks.
+- Built-in tasks never display an enabled delete control.
+- Model/repository deletion must independently reject built-in IDs even if called outside the UI.
+- Activating delete opens an accessible confirmation dialog identifying the exact task.
+- Cancelling or dismissing confirmation changes no data.
+- Confirming removes the custom task from the visible UI and starts an undo opportunity lasting exactly five seconds.
+- The undo notice clearly identifies the deleted task and exposes an accessible Undo control.
+- Undo within five seconds restores the complete original task without losing:
+  - identifier
+  - title
+  - room assignment
+  - interval
+  - supported task state
+  - tags
+  - safe preserved unknown fields
+  - relevant visible room/filter context
+- Choose the safest reversible persistence design. Prefer deferring permanent repository deletion until the five-second undo period expires so an app close or reload during the window cannot lose the task.
+- If the app reloads or closes before permanent deletion is written, the task must remain present.
+- After the five-second period expires, persist deletion of exactly that custom task.
+- If permanent deletion fails:
+  - restore the task in the UI,
+  - retain its complete data,
+  - show an accessible error,
+  - leave all other tasks and stored bytes unchanged.
+- Prevent duplicate delete confirmations, repeated confirmation taps, and duplicate persistence writes.
+- Use a deterministic/fake clock in automated tests; do not m

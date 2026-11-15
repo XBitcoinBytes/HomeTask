@@ -1,0 +1,61 @@
+CP5C-0 source findings are accepted. Do not repeat the audit and do not implement yet.
+
+Correct four remaining design points, then provide the CP5C-A1 implementation proposal only.
+
+1. Separate ordinary mutations from backup imports
+
+Do not route Done, Skip, preferences, recents, or ordinary task changes through runImportTransaction(), because its hometask-backup-v2 snapshot belongs to Undo Import.
+
+Define a separate verified single-key v2 mutation writer or separate mutation transaction keys. Explain:
+
+- setItem atomicity assumptions;
+- write/readback validation;
+- preservation of the previous bytes on failure;
+- crash behavior;
+- how this can support the upcoming short-lived Undo for Done/Skip;
+- proof that ordinary mutations never overwrite Undo Import state.
+
+runImportTransaction remains exclusively for backup imports and their undo/recovery workflow.
+
+2. Correct startup ordering under a valid marker
+
+A partially completed v2 import may leave DATA needing rollback before validation.
+
+Define the sequence precisely:
+
+- legacy v1 import recovery where applicable;
+- activation staging recovery and structural marker inspection;
+- establish provisional v2 authority from a structurally valid committed marker;
+- run v2 import recovery;
+- validate the recovered/current canonical v2 envelope;
+- finalize v2-authoritative decision;
+- construct repository and hydrate state.
+
+Explain malformed marker, absent DATA, invalid DATA with recoverable import staging, invalid DATA without recovery evidence, timeout, and ambiguous states. Do not quarantine recoverable DATA before import recovery has had its opportunity.
+
+3. Correct the dependency graph
+
+Use one direction only:
+
+raw adapter → codecs/repository implementations → domain services receiving an injected repository → UI
+
+Repositories must not import tasks/meta/recents domain modules. Domain modules must not import concrete v1/v2 repositories. Bootstrap constructs the repository and injects its interface.
+
+List exact imports proposed for every CP5C-A1 file and prove there is no cycle.
+
+4. Correct checkpoint descriptions
+
+CP5B already wired recoverActivationStartup() and bootDecision(). CP5C-C should add controlled initial runActivation(), authority-aware repository selection, and end-to-end activation testing—not reimplement CP5B.
+
+Then provide CP5C-A1 only:
+
+- pure repository interface;
+- disconnected V1Repository;
+- injected storage adapter;
+- exact parity with current v1 parsing, merging, normalization, and error recovery;
+- no app wiring;
+- no v2 repository;
+- no use of v2 import-tx;
+- tests comparing V1Repository output and written bytes against current production behavior.
+
+Keep V2_ACTIVATION_ENABLED=false. No source changes, build, publish, or later CP5C work. Stop for approval.

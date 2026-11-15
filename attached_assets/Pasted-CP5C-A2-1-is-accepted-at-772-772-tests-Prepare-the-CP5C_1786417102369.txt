@@ -1,0 +1,44 @@
+CP5C-A2.1 is accepted at 772/772 tests.
+
+Prepare the CP5C-A2.2 plan only. Do not implement.
+
+Objective:
+Place the existing v1 Backup & Restore workflows behind a clean, authority-aware backup-service boundary while v1 remains authoritative and behavior remains unchanged.
+
+Inventory the exact current paths for:
+
+- backup export construction
+- last-export metadata
+- file reading and validation
+- import confirmation
+- pre-import snapshot
+- atomic import staging/commit
+- interrupted-import startup recovery
+- Undo Last Import
+- malformed-storage preservation/recovery download
+- page reload after import/undo
+
+Design a cycle-free separation:
+
+- V1Repository: ordinary tasks/prefs/recents state
+- V1BackupService: v1 export/import/undo transaction orchestration
+- low-level backup/staging/recovery stores
+- Backup UI: receives injected backup service; no authority-specific storage access
+- startup recovery: remains an explicit pre-repository bootstrap transaction
+
+Requirements:
+
+1. Preserve schemaVersion 1 exported-file bytes and validation behavior.
+2. Preserve current atomic import, rollback, undo, and damaged-data recovery semantics.
+3. Do not let backup import overwrite catalog-authoritative fields.
+4. Do not let ordinary Done/Skip writes overwrite Undo Import snapshots.
+5. Define repository cache behavior after import/undo; page reload must occur only after verified success.
+6. Define exact failure behavior for snapshot failure, staging failure, partial commit, rollback failure, malformed JSON, oversized files, unknown IDs, and quota exhaustion.
+7. Remove broad backup.js storage exemptions where possible; retain only exact low-level transaction modules.
+8. Show how the future V2BackupService will reuse the existing CP3 v2 backup/import functions without changing the UI contract.
+9. Provide exact interfaces, files, dependency graph, tests, 390×844 browser scenarios, risks, rollback, and expected test arithmetic from 772.
+10. Assess whether this should be divided into:
+   - A2.2a: disconnected V1BackupService with differential tests
+   - A2.2b: UI/runtime wiring with zero behavior change
+
+Keep V2_ACTIVATION_ENABLED=false. No implementation, build, publish, V2Repository, activation, features, or visual changes. Stop for approval.

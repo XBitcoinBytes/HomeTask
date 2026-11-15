@@ -1,0 +1,118 @@
+Update the existing HomeTask project to introduce three simple task views:
+
+1. Today
+2. This Week
+3. All Tasks
+
+Today must become the default landing view.
+
+Important: preserve all existing task data, intervals, Smart Start behavior, localStorage history, status colors, Done behavior, skip logic, search, room filtering, progress tracking, accessibility, PWA support, and liquid-metallic visual design. Do not add unrelated features or rewrite the architecture.
+
+VIEW DEFINITIONS
+
+Today:
+- Show overdue tasks.
+- Show severely overdue and safety tasks.
+- Show tasks due today.
+- Show tasks genuinely completed today so the user can see their progress.
+- Do not show tasks that are only due later this week.
+- This must be the default view after Smart Start and when no saved view preference exists.
+
+This Week:
+- Show everything included in Today.
+- Also show tasks due within the next 7 calendar days.
+- Do not show tasks due more than 7 days in the future.
+
+All Tasks:
+- Show the complete task catalog, including future tasks.
+
+INTERFACE
+
+Replace the current single “Due now” toggle with a compact, accessible three-option view control labeled:
+
+Today | This Week | All Tasks
+
+Place it near the search and room-filter controls.
+
+The control must:
+- Clearly show which view is selected.
+- Use minimum 44×44 CSS-pixel touch targets.
+- Work cleanly at iPhone widths.
+- Support keyboard navigation and VoiceOver.
+- Use aria-pressed or an appropriate radiogroup pattern.
+- Preserve the selected view across reloads.
+- Continue working correctly with both task search and room filtering.
+
+CALM HEADER LANGUAGE
+
+Stop using a broad message such as “35 tasks need attention” when most tasks are merely coming up later.
+
+For the Today view, show a calm summary such as:
+- “5 due today”
+- “30 coming up this week”
+
+Do not combine those numbers into “35 tasks need attention.”
+
+For This Week, show:
+- The number due today.
+- The number coming up during the remainder of the week.
+
+For All Tasks, show the total number of tasks without implying they all require attention.
+
+Keep the existing “X of Y done today” progress indicator. Its total must remain based on the complete task catalog and must not change when filters are applied.
+
+EMPTY STATES
+
+Today:
+- “You’re caught up for today.”
+- Add a simple “View this week” action.
+
+This Week:
+- “Nothing else is due this week.”
+- Add a simple “View all tasks” action.
+
+All Tasks:
+- Preserve helpful search and room-filter empty states.
+
+SCHEDULING RULES
+
+Do not change how dates are calculated.
+
+- Done must still record completion, clear skip overrides, and calculate the next due date from completion date + intervalDays.
+- Skip today and Skip week must still move the effective due date without recording completion.
+- Green must remain reserved for tasks genuinely completed today.
+- White, yellow, orange, and red must retain their current meanings.
+- Unconfirmed safety tasks must remain visible in Today.
+- A task must move between Today, This Week, and All Tasks immediately when Done or Skip changes its effective due date.
+
+PERSISTENCE AND MIGRATION
+
+Add a saved viewMode preference with values such as:
+- today
+- week
+- all
+
+Default viewMode to today for users who do not already have this field.
+
+Safely migrate the previous dueNowOnly preference without losing task data, completion history, room selection, onboarding status, or skip overrides.
+
+VERIFICATION
+
+After implementation, test and confirm:
+
+- Today is the default.
+- Today excludes tasks due later this week.
+- This Week includes tasks due within 7 days.
+- All Tasks shows the complete catalog.
+- Overdue and safety tasks always appear in Today.
+- Done-today tasks remain visible and green in Today.
+- Search, room filtering, and view selection work together.
+- Done and Skip immediately move tasks into the correct view.
+- The selected view persists after reload.
+- Progress totals remain accurate and independent of filtering.
+- Empty-state actions switch to the correct view.
+- No console errors occur.
+- Existing saved task history is preserved.
+- The service-worker cache version is updated so the new interface loads immediately.
+
+Refresh the development preview when finished and report exactly which cases were tested.

@@ -1,0 +1,173 @@
+Fix a physical-iPhone Safari bug in HomeTask’s room picker.
+
+OBSERVED ON A REAL IPHONE
+
+When the user taps “All Rooms,” the screen dims, proving that showModal() opens the dialog and the modal backdrop is active. However, the actual room-picker sheet and room choices are not visible. The user sees only a gray/dimmed screen.
+
+This must be treated as a physical-iPhone blocker.
+
+IMPORTANT
+
+- Use only vanilla HTML, CSS, and JavaScript.
+- Do not change task data, scheduling, Done, Skip, views, search, progress, backup, import, storage, or catalog logic.
+- Do not redesign the interface.
+- Preserve the current liquid-metallic styling.
+- Preserve VoiceOver behavior and 44×44px touch targets.
+- Do not use user-agent sniffing.
+- Do not clear or migrate user data.
+- Do not change the working Backup & Restore dialog unless a shared dialog fix is demonstrably necessary.
+- Keep hashed JavaScript and CSS production assets.
+
+LIKELY FAILURE AREA
+
+The backdrop appears, so the click handler and native dialog opening are working. Investigate the room-picker dialog’s:
+
+- transform animation
+- fixed positioning
+- bottom inset
+- max-height
+- overflow
+- automatic search-field focus
+- interaction with Safari’s visual viewport
+- safe-area padding
+- open/closing classes
+- animation completion state
+
+1. DO NOT ANIMATE THE DIALOG ELEMENT ITSELF
+
+Avoid applying translateY() animations directly to the native <dialog> element. Safari can place transformed top-layer dialogs incorrectly or leave them outside the visible viewport.
+
+Use a stable full-viewport dialog container:
+
+- position: fixed
+- inset: 0
+- width: 100%
+- height: 100dvh
+- max-width: none
+- max-height: none
+- margin: 0
+- padding: 0
+- border: 0
+- background: transparent
+- overflow: hidden
+
+Position the inner room-picker sheet at the bottom of that stable dialog container.
+
+Animate only the inner sheet, not <dialog> itself.
+
+After animation completion, ensure the inner sheet has no stale transform that could leave it below the viewport.
+
+2. PROVIDE A NON-ANIMATED SAFE STATE
+
+The room picker must remain visible even if:
+
+- animations fail
+- animationend does not fire
+- Reduce Motion is enabled
+- Safari resizes its visual viewport
+- the software keyboard opens
+- the page changes orientation
+
+The default open state should be visible. Animation should be progressive enhancement, not required for visibility.
+
+Do not leave the sheet initially translated off-screen unless JavaScript can reliably transition it into view.
+
+3. SIZE THE SHEET FOR IPHONE SAFARI
+
+The inner sheet should:
+
+- remain anchored to the visible bottom edge
+- include env(safe-area-inset-bottom)
+- use a maximum height based on 100dvh
+- have a scrollable room-list region
+- keep the title and Close button visible
+- avoid horizontal overflow
+- remain usable in portrait and landscape
+- adjust safely when the visual viewport changes
+
+Use a structure similar to:
+
+dialog.rp-dialog
+  div.rp-sheet
+    header
+    search
+    scrollable room list
+
+The sheet, not the entire page, should scroll when necessary.
+
+4. RECONSIDER AUTOMATIC SEARCH FOCUS
+
+Do not immediately focus the room-search input if doing so opens the iPhone keyboard before the sheet is visibly positioned.
+
+On open:
+
+- focus the dialog heading, Close button, or sheet container first
+- allow the user to tap Search Rooms when they want the keyboard
+- preserve logical VoiceOver focus
+- restore focus to the All Rooms button when closing
+
+If automatic search focus is retained, prove that it works correctly on physical Safari with the keyboard open.
+
+5. ADD A VISIBILITY SAFETY CHECK
+
+After showModal() and the next animation frame, verify that the sheet has a usable bounding rectangle:
+
+- width greater than zero
+- height greater than zero
+- top less than the visible viewport height
+- bottom greater than zero
+
+If the sheet is outside the viewport, remove animation transforms and apply the visible fallback state.
+
+This fallback must not create an animation loop.
+
+6. CLOSING BEHAVIOR
+
+Verify:
+
+- Close button works
+- Escape works where supported
+- backdrop tap closes
+- focus returns to All Rooms
+- reopening works repeatedly
+- scrolling the room list does not dismiss the dialog
+- selecting a room closes the dialog and applies the filter
+
+7. REQUIRED TESTS
+
+Test:
+
+- iPhone-size viewport 390×844
+- portrait
+- landscape
+- reduced motion
+- large text
+- repeated open and close
+- opening after scrolling far down the task list
+- opening with Safari browser controls expanded
+- opening with Safari controls collapsed
+- room-search keyboard open
+- selecting All Rooms
+- selecting a specific room
+- searching rooms
+- backdrop close
+- Close-button behavior
+- no horizontal overflow
+- all dialog controls at least 44×44px
+- Backup & Restore dialog still works
+- no console errors
+
+Use Playwright WebKit testing if available, but do not claim that simulator testing replaces verification on a physical iPhone.
+
+8. DEPLOYMENT
+
+After fixing:
+
+- increment the service-worker version
+- retain content-hashed JavaScript and CSS
+- deploy publicly
+- verify the public URL serves the new assets
+- report the JavaScript asset, CSS asset, and service-worker version
+- provide exact physical-iPhone retest instructions
+
+Do not add custom tasks, seasonal scheduling, room editing, new features, or visual redesign in this bug-fix pass.

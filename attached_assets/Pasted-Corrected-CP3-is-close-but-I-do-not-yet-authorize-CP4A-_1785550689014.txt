@@ -1,0 +1,137 @@
+Corrected CP3 is close, but I do not yet authorize CP4A.
+
+Two final data-model corrections are required before v2 is frozen. Do not begin CP4, connect v2 to runtime, build, change the service worker, publish, or create project tasks.
+
+Correction 1 — Apply Policy A to All Quarantined User Data
+
+The report incorrectly classifies task state and seed overrides as “not user-owned.”
+
+These are user-owned:
+
+- Completion state
+- lastDone and doneToday state
+- Skip state
+- Tags
+- State associated with a user-created task
+- User overrides to seed titles, zones, recurrence, or archival state
+
+Dropping any of these while reporting a completely successful import can lose user data or user intent.
+
+Because Policy A was selected, use the following rule:
+
+For schema-v2 imports, any quarantined task, zone, state record, completion event, or override must reject the complete import before live storage changes.
+
+Specific outcomes:
+
+- Unknown seed-format task state: reject with the calm “This backup may come from a newer HomeTask catalog; update HomeTask and try again” message.
+- Unknown user-format task state: reject as an incomplete or damaged backup.
+- Malformed state record: reject.
+- Override addressing an unknown seed item: reject with catalog-compatibility language.
+- Override with an invalid recurrence: reject rather than silently dropping the user’s schedule.
+- User task or zone that cannot be placed: reject.
+- Known tombstone state remains valid and accepted.
+- Attempts to override catalog-authoritative safety may continue to be stripped and reported because that field was never valid user authority.
+- Deterministic normalization and safe field repairs may continue where they preserve the record’s meaning.
+
+For schema-v2 user-owned records, unknown fields should reject rather than be silently stripped. They may represent data created by a newer compatible build. Existing schema-v1 compatibility may retain its separately documented migration rules.
+
+Add tests proving:
+
+1. Every possible non-empty quarantined collection prevents a v2 transaction.
+2. Live storage and unrelated keys remain byte-identical after rejection.
+3. No import with omitted state, override, task, zone, or completion data can report complete success.
+4. Known tombstones remain accepted.
+5. The newer-catalog error is calm and actionable.
+6. Schema-v1 behavior remains explicitly documented and tested separately.
+
+Correction 2 — Effective Uniqueness
+
+Duplicate normalized user-zone titles must also be checked against active seed-zone titles, not only against other user zones.
+
+A user-created “Kitchen” must not coexist ambiguously with the seed “Kitchen.”
+
+Also validate the final composed task set:
+
+- No two active zones share the same normalized title.
+- No two active tasks in the same effective zone share the same normalized title.
+- Overrides cannot accidentally create duplicate room or task names.
+- Archived items are handled according to an explicit policy and do not create ambiguous active UI entries.
+
+Reject ambiguous imported v2 data and report the conflicting records clearly.
+
+Correction 3 — Reserve V2 Completion History and Optional Duration
+
+The owner has confirmed that optional duration tracking remains a planned feature. Add its storage shape now, before shadow migration and v2 activation, without adding any runtime interface.
+
+Add a ninth canonical v2 collection:
+
+completionEvents: []
+
+Each future event has this shape:
+
+{
+  id: "c_<stable-user-generated-id>",
+  taskId: "<seed-or-user-task-id>",
+  completedOn: "YYYY-MM-DD",
+  durationMinutes: null
+}
+
+durationMinutes may instead be a positive integer when the user optionally records a duration.
+
+Rules:
+
+- durationMinutes is optional in the product flow and normalized to null when intentionally absent.
+- A supplied duration must be a reasonable positive integer; define and document the maximum.
+- completedOn uses the existing valid local YYYY-MM-DD convention.
+- The event ID must be unique and stable.
+- taskId must resolve to an active, archived, or known tombstoned task.
+- An event referencing an unknown task rejects the v2 import under Policy A.
+- Completion events are user-owned portable backup data.
+- Completion events must survive export, import, rollback, and the data-loss tripwire.
+- The v1-to-v2 migration should output completionEvents: [] and must not fabricate historical events from lastDone.
+- lastDone remains the authoritative current scheduling field until a later approved runtime step defines atomic Done-plus-history behavior.
+- Do not change the current Done button or runtime behavior in this correction.
+- Do not calculate averages or add duration UI yet.
+
+Update:
+
+- The canonical-envelope definition and validator
+- migrate()
+- reverseMigrate() unsupported/lossy rules
+- Backup-envelope documentation
+- Backup validation
+- Referential-integrity checks
+- assertEquivalent() where applicable
+- V2 round-trip and tripwire tests
+- Collection limits
+- Failure-injection fixtures
+
+Explain the chosen completion-event ID format and duration maximum. Do not require crypto.randomUUID during migration or pure fixture tests; ID generation belongs to the later runtime implementation.
+
+Correction 4 — Confirm Title Policy Behavior
+
+The current normalizer mirrors production and capitalizes each word’s first letter while preserving the remaining characters.
+
+This is acceptable for CP3 if it is the established production contract. Document explicitly that it does not necessarily lowercase unusual mixed-case input.
+
+Do not silently claim that “cLEAN FLOOR” becomes “Clean Floor” unless the implementation actually does so. We can revise the naming policy later as a separately migrated product decision if needed.
+
+Required verification:
+
+- Rerun every existing test.
+- Add the new Policy A, uniqueness, and completion-event tests.
+- Rerun Playwright.
+- Report exact totals by suite.
+- Provide a representative nine-field canonical envelope.
+- Provide the final validation-outcome table.
+- Confirm that no v2 import can succeed with quarantined user-owned data.
+- Confirm that current v1 runtime behavior remains unchanged.
+- Confirm src/v2 remains disconnected.
+- Confirm SW v19, public/, dist/, and production remain unchanged.
+- Provide an updated CP4A–CP4E plan, but do not begin it.
+
+Stop and ask:
+
+“Do you approve final corrected CP3 and authorize CP4A only?”
+
+Do not begin CP4 without explicit approval.

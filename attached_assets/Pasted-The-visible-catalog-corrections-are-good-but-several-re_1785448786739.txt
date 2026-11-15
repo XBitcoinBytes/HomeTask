@@ -1,0 +1,114 @@
+The visible catalog corrections are good, but several requirements from the previous task were not reported or may not have been implemented. Complete the following focused follow-up without changing the UI or existing behavior.
+
+Use only vanilla HTML, CSS, and JavaScript. Preserve all Done, Skip, scheduling, status-color, view, search, room-filter, progress, persistence, onboarding, and PWA behavior.
+
+1. PERMANENT TITLE-CASE POLICY
+
+Add one centralized function named:
+
+normalizeTaskTitle(title)
+
+It must:
+
+- trim leading and trailing whitespace
+- collapse repeated internal whitespace
+- capitalize the first letter of every word
+- handle apostrophes and hyphenated words sensibly
+- preserve numbers
+- preserve recognized acronyms such as HEPA
+- return an empty string for invalid or empty input
+
+This function must represent the permanent HomeTask naming policy.
+
+Use it when catalog data is initialized or validated and at every data-writing boundary that accepts a task title. Add a concise code comment stating that any future task-creation or editing interface must call this function before saving.
+
+Do not repeatedly transform titles during every render.
+
+Add direct tests for at least:
+
+- "clean baseboards" → "Clean Baseboards"
+- "  take   out garbage  " → "Take Out Garbage"
+- "change air cleaner HEPA" → "Change Air Cleaner HEPA"
+- "mother-in-law room" → "Mother-In-Law Room"
+- empty or whitespace-only input → ""
+
+2. VERIFY STORAGE MERGE PRECEDENCE
+
+Clarify and test the merge behavior for existing saved tasks.
+
+Authoritative catalog fields must come from the seed catalog:
+
+- id
+- title
+- room
+- intervalDays
+- safety classification
+- tags or other catalog metadata
+
+User-state fields may come from saved storage:
+
+- lastDone
+- doneToday
+- skipUntil
+- completion history
+- other scheduling or preference state
+
+An old saved title such as “Clean baseboards” must not override the authoritative seed title “Clean Baseboards.”
+
+Do not simply spread every saved property over the seed object. Explicitly whitelist the saved state fields that are allowed to override catalog data.
+
+Verify at runtime by loading a simulated legacy saved entry containing the old lowercase title and confirm:
+
+- the displayed title is “Clean Baseboards”
+- its saved lastDone and skipUntil values are preserved
+
+3. ADD CATALOG VALIDATION
+
+Add a lightweight development/startup catalog validator that checks:
+
+- unique task IDs
+- no duplicate room/title combinations
+- all required fields are present
+- every intervalDays value is a positive whole number
+- every title already matches normalizeTaskTitle(title)
+- room names are non-empty and consistently trimmed
+- retired IDs mbath-all, hb-all, mdb-all, and bb-all are absent
+- only intended tasks have the safety classification
+
+Report clear console errors identifying the offending task. Validation should not prevent normal production use.
+
+Do not silently change IDs or intervals.
+
+4. PROVIDE THE AUTHORITATIVE AUDIT RESULTS
+
+Report:
+
+- final task count
+- final room/zone count
+- whether duplicate IDs were found
+- whether duplicate room/title combinations were found
+- whether invalid intervals or missing fields were found
+- complete list of safety-classified tasks
+- confirmation that all 122 titles pass the Title Case validator
+- confirmation that all four retired IDs are absent
+
+5. VERIFY THE PUBLIC DEPLOYMENT
+
+Build and deploy the finished version publicly.
+
+Increment the service-worker cache version beyond v12.
+
+Then test the actual public URL—not only localhost or the development server—and report:
+
+- public URL
+- JavaScript asset filename served publicly
+- service-worker cache version
+- pre-onboarding header wording
+- All Tasks count
+- legacy lowercase-title migration result
+- absence of “Whole Bathroom Done”
+- search for “baseboards” finding “Clean Baseboards”
+- no console errors
+- no horizontal overflow at 390×844
+
+Do not report completion until the deployed public URL is serving the new asset and all tests above pass.
